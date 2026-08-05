@@ -3,8 +3,8 @@
 ## 1. Document Status
 
 - **Current milestone:** Version 0.1 — Minimal Platform and Deterministic Integration
-- **Current milestone status:** Planned
-- **Application implementation:** Not started
+- **Current milestone status:** In Progress
+- **Application implementation:** In Progress
 - **Documentation baseline:** Approved on 2026-08-05
 - **Last updated:** 2026-08-05
 
@@ -18,7 +18,7 @@ This roadmap is the authoritative source for implementation order, dependencies,
 - **Optional future evolution** — not committed and requires future justification.
 - **Deferred** — intentionally removed from the current sequence.
 
-At the date above, only the documentation baseline is implemented. Application capabilities are planned.
+At the date above, repository bootstrap, PostgreSQL, Flyway, user persistence, and browser registration are implemented. Version 0.1 remains in progress.
 
 ## 3. Roadmap Principles
 
@@ -32,13 +32,44 @@ At the date above, only the documentation baseline is implemented. Application c
 
 ## 4. Version 0.1 — Minimal Platform and Deterministic Integration
 
-**Status:** Approved for current milestone; not started
+**Status:** In Progress
 
-### 4.1 Goal
+### 4.1 Current Implementation Progress
+
+Implemented and verified:
+
+- GitHub monorepo with buildable Spring Boot and React applications;
+- Maven Wrapper and Vite project bootstrap;
+- PostgreSQL 17 through Docker Compose;
+- environment-based database configuration;
+- Flyway baseline and `users` schema migrations;
+- JPA `User` model and repository;
+- normalized unique email persistence;
+- Spring Security password hashing with `{bcrypt}` storage;
+- public registration API with validation and duplicate-email conflict response;
+- CSRF-token endpoint and CSRF enforcement for registration;
+- React registration form connected to the backend through the Vite proxy;
+- PostgreSQL repository and registration API integration tests;
+- frontend lint and production-build verification;
+- manual browser-to-database registration verification.
+
+Still required for Version 0.1:
+
+- login, logout, current-user endpoint, and authenticated server-side session;
+- HTTP-only authenticated-session cookie behavior;
+- company membership and tenant isolation;
+- document metadata and storage abstraction;
+- persistent processing job and deterministic parser;
+- canonical success output;
+- structured failure, structural profile, and incident;
+- complete frontend workflow;
+- repository CI and final milestone documentation.
+
+### 4.2 Goal
 
 Deliver the smallest local platform that proves the deterministic business flow and creates the structured failure boundary required by the first agent milestone.
 
-### 4.2 Demonstrable Scenario
+### 4.3 Demonstrable Scenario
 
 At the end of Version 0.1:
 
@@ -53,7 +84,7 @@ At the end of Version 0.1:
 
 No LLM is required for this milestone.
 
-### 4.3 Scope
+### 4.4 Scope
 
 #### Repository and Build
 
@@ -113,7 +144,7 @@ No LLM is required for this milestone.
 - structured failure and incident display;
 - basic validation and authorization feedback.
 
-### 4.4 Explicit Non-Scope
+### 4.5 Explicit Non-Scope
 
 Version 0.1 does not include:
 
@@ -132,27 +163,55 @@ Version 0.1 does not include:
 
 The architecture must still leave a clear path toward these capabilities.
 
-### 4.5 Implementation Order
+### 4.6 Implementation Order
 
 #### Step 1 — Repository Bootstrap
 
-- create `backend/` and `frontend/`;
-- generate buildable applications;
-- add `.gitignore`, environment examples, and baseline CI;
-- verify backend tests and frontend build.
+**Status:** In Progress
+
+Implemented:
+
+- created `backend/` and `frontend/`;
+- generated buildable applications;
+- added Maven Wrapper, `.gitignore`, and environment example;
+- verified backend tests and frontend lint/build.
+
+Remaining:
+
+- add baseline repository CI.
 
 #### Step 2 — PostgreSQL and Flyway
 
-- add Docker Compose PostgreSQL;
-- configure local and test database settings;
-- add initial Flyway migrations;
-- verify application connectivity and migration startup.
+**Status:** Implemented
+
+- added Docker Compose PostgreSQL;
+- configured environment-based local database settings;
+- configured Spring Boot through `application.yml`;
+- made Flyway authoritative for schema changes;
+- applied the baseline and `users` migrations;
+- verified application connectivity, schema validation, and migration history.
 
 #### Step 3 — Identity and Session Security
 
-- implement user registration, password hashing, login, logout, and current user;
-- configure secure session and CSRF behavior;
-- add API and integration tests.
+**Status:** In Progress
+
+Implemented:
+
+- user persistence and unique normalized email;
+- registration request validation;
+- adaptive password hashing;
+- duplicate-email conflict handling;
+- CSRF-token endpoint and CSRF-protected registration;
+- registration API integration tests;
+- React registration screen and backend connection.
+
+Remaining:
+
+- implement login and logout;
+- expose the current authenticated user;
+- create and verify the server-side authenticated session;
+- configure and verify authenticated-session cookie behavior;
+- add session lifecycle and unauthorized-access tests.
 
 #### Step 4 — Company Membership and Tenant Isolation
 
@@ -197,7 +256,7 @@ The architecture must still leave a clear path toward these capabilities.
 - document deviations with ADRs;
 - record demo steps.
 
-### 4.6 Completion Criteria
+### 4.7 Completion Criteria
 
 Version 0.1 is complete only when:
 
@@ -219,11 +278,11 @@ Version 0.1 is complete only when:
 16. Unit, integration, security, parser, and API tests pass.
 17. Documentation accurately states what is implemented and what remains planned.
 
-### 4.7 Dependencies
+### 4.8 Dependencies
 
 None beyond repository setup and local development tooling.
 
-### 4.8 What Becomes Demonstrable
+### 4.9 What Becomes Demonstrable
 
 A secure, multi-tenant Java platform can accept a synthetic integration file, process it deterministically, and produce an incident boundary suitable for an agent without exposing raw financial data.
 
@@ -535,8 +594,19 @@ The following are deliberately deferred from Version 0.1:
 
 ## 13. Immediate Next Implementation Task
 
-The first implementation issue after this documentation baseline is:
+The next implementation issue is:
 
-> Bootstrap the monorepo with buildable Java and React applications plus PostgreSQL in Docker Compose, without implementing business features yet.
+> Complete the authentication lifecycle with login, logout, current-user retrieval, and a verified server-side session, while preserving CSRF protection and the existing registration flow.
 
-Detailed acceptance criteria are provided in the accompanying project handoff and should be copied into the first issue before coding begins.
+Expected scope:
+
+- authenticate by normalized email and password;
+- reject invalid credentials without leaking account details;
+- create an authenticated server-side session;
+- expose `GET /api/auth/me`;
+- implement logout and session invalidation;
+- add API integration tests for success, failure, unauthenticated access, session reuse, and logout;
+- extend the React UI only enough to demonstrate login, current user, and logout.
+
+Company membership remains the following task after session authentication is complete.
+

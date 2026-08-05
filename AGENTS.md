@@ -8,9 +8,25 @@ It applies to any agent that reads, changes, tests, reviews, or documents reposi
 
 ## 2. Current Project Status
 
-- **Application implementation:** Not started
+- **Application implementation:** In Progress
 - **Current milestone:** Version 0.1 — Minimal Platform and Deterministic Integration
+- **Milestone status:** In Progress
 - **Last updated:** 2026-08-05
+
+Implemented now:
+
+- Java and React application bootstrap;
+- PostgreSQL through Docker Compose;
+- Flyway schema migrations;
+- user persistence and repository tests;
+- user registration with validation, normalized email, bcrypt password hashing, and duplicate handling;
+- CSRF-protected registration and React integration.
+
+Not implemented yet:
+
+- login, logout, current user, and authenticated sessions;
+- companies, tenant isolation, documents, processing, parsers, incidents, or agents;
+- Kafka, Redis, AWS, S3, Kubernetes, or production deployment.
 
 Agents must verify the current status in `README.md`, `ROADMAP.md`, and `ARCHITECTURE.md` before making changes. Planned technologies must not be described as implemented.
 
@@ -133,6 +149,24 @@ Agents must:
 ## 11. Testing Rules
 
 Every behavior change requires appropriate tests.
+
+Current verified commands:
+
+```bash
+# local database required by current backend integration tests
+docker compose up -d postgres
+
+# backend
+cd backend
+./mvnw test
+
+# frontend
+cd frontend
+npm run lint
+npm run build
+```
+
+Agents must run the relevant commands from the repository state they actually inspected and must report any omitted verification explicitly.
 
 Expected layers include:
 

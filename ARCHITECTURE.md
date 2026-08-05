@@ -4,17 +4,17 @@
 
 - **Architecture baseline:** Approved before application development
 - **Current approved milestone:** Version 0.1 — Minimal Platform and Deterministic Integration
-- **Application implementation:** Not started
+- **Application implementation:** In Progress
 - **Last updated:** 2026-08-05
 
 This document explicitly separates:
 
 - **implemented now** — verified running architecture;
-- **approved for Version 0.1** — the next implementation target;
+- **approved for Version 0.1** — committed milestone architecture not yet fully implemented;
 - **planned for later milestones** — approved evolution that is not yet running;
 - **optional future evolution** — possible additions requiring future justification.
 
-At the date above, no application containers or services are implemented. The diagrams below are labeled according to their status.
+The current running subset includes a React registration UI, Java Spring Boot identity and security components, PostgreSQL through Docker Compose, Flyway migrations, and browser-to-database registration. Login, authenticated sessions, companies, documents, processing, incidents, agents, and cloud infrastructure remain unimplemented.
 
 ## 2. Architectural Goals
 
@@ -71,7 +71,66 @@ Only a subset of this target exists in each milestone.
 
 ### 4.1 Implemented Now
 
-No application runtime is implemented. Only project documentation exists.
+```text
++---------------------------+
+| React Frontend            |
+|                           |
+| - registration form       |
+| - validation feedback     |
++-------------+-------------+
+              |
+              | JSON over HTTP through Vite /api proxy
+              | CSRF token and cookie
+              v
++---------------------------+
+| Java Spring Boot App      |
+|                           |
+| - registration API        |
+| - request validation      |
+| - email normalization     |
+| - password hashing        |
+| - duplicate handling      |
+| - CSRF endpoint/security  |
++-------------+-------------+
+              |
+              | JPA / JDBC
+              v
++---------------------------+
+| PostgreSQL 17             |
+| Docker Compose            |
+|                           |
+| - flyway_schema_history   |
+| - users                   |
++---------------------------+
+```
+
+Implemented endpoints:
+
+```text
+GET  /api/csrf
+POST /api/auth/register
+```
+
+Implemented persistence:
+
+- Flyway `V1__baseline.sql`;
+- Flyway `V2__create_users.sql`;
+- `users` table with unique normalized email, password hash, display name, status, and timestamps;
+- JPA `User` entity and `UserRepository`.
+
+Implemented security behavior:
+
+- plaintext passwords are not persisted;
+- new passwords use Spring Security's delegating encoder with `{bcrypt}` hashes;
+- registration requires a valid CSRF token;
+- duplicate email is protected by both an application check and a database uniqueness constraint.
+
+Not implemented in the current runtime:
+
+- login, logout, current-user retrieval, or an authenticated server-side session;
+- company membership or tenant authorization;
+- document storage, processing jobs, parsers, results, incidents, or structural profiles;
+- Python, MCP, Kafka, Redis, S3, AWS, or agent runtimes.
 
 ### 4.2 Approved Version 0.1 Container View
 
@@ -166,16 +225,14 @@ For local development, both logical data stores may run in one PostgreSQL contai
 
 ## 5. Repository Architecture
 
-The planned monorepo is:
+The current monorepo contains:
 
 ```text
 tax-platform/
-├── backend/
-├── frontend/
-├── agent-service/                  # added in Version 0.2
-├── integration-samples/
-├── docs/
-├── docker-compose.yml
+├── backend/                         # implemented Java/Spring Boot application
+├── frontend/                        # implemented React/TypeScript application
+├── docker-compose.yml               # implemented PostgreSQL infrastructure
+├── .env.example                     # safe local configuration example
 ├── AGENTS.md
 ├── CONTRIBUTING.md
 ├── README.md
@@ -183,6 +240,15 @@ tax-platform/
 ├── ROADMAP.md
 ├── ARCHITECTURE.md
 └── DECISIONS.md
+```
+
+Planned additions appear only when their milestone capability is implemented:
+
+```text
+tax-platform/
+├── agent-service/                   # Version 0.2
+├── integration-samples/             # deterministic parser fixtures
+└── docs/                             # detailed security, incident, and evaluation documents
 ```
 
 Monorepo rules:
@@ -197,10 +263,20 @@ Monorepo rules:
 
 The Java backend is the business source of truth and security boundary.
 
-### 6.1 Planned Module Boundaries
+### 6.1 Current and Planned Module Boundaries
+
+Current base package:
 
 ```text
-com.example.taxplatform
+com.poliakov.taxplatform
+├── identity             # partially implemented
+└── security             # partially implemented
+```
+
+Approved Version 0.1 evolution:
+
+```text
+com.poliakov.taxplatform
 ├── identity
 ├── security
 ├── company
@@ -208,39 +284,63 @@ com.example.taxplatform
 ├── processing
 ├── integration
 ├── incident
-├── knownissue
 ├── audit
-├── agentgateway       # introduced with Version 0.2 MCP tools
 ├── common
 └── configuration
 ```
 
-The final base package may differ, but the responsibilities must remain explicit.
+Planned later additions:
+
+```text
+com.poliakov.taxplatform
+├── knownissue
+└── agentgateway         # introduced with Version 0.2 MCP tools
+```
+
+The package structure may be refined, but responsibilities must remain explicit and planned modules must not be described as running before implementation.
 
 ### 6.2 Identity Module
 
-Responsibilities:
+Current implementation:
 
+- `User` JPA entity;
+- `UserStatus` enum;
+- `UserRepository`;
 - user registration;
-- email normalization and uniqueness;
+- email trimming, lower-case normalization, and uniqueness;
 - secure password hashes;
-- user status;
-- authenticated user profile.
+- user status and timestamps;
+- registration request validation;
+- duplicate-email conflict response.
 
-It does not own company authorization.
+Remaining Version 0.1 responsibilities:
+
+- authenticated user profile;
+- integration with login and current-user retrieval.
+
+The identity module does not own company authorization.
 
 ### 6.3 Security Module
 
-Responsibilities:
+Current implementation:
 
-- Spring Security configuration;
-- server-side sessions;
-- login and logout;
-- HTTP-only cookie settings;
-- CSRF integration;
+- Spring Security filter-chain configuration;
+- public registration endpoint;
+- public CSRF-token endpoint;
+- CSRF enforcement for state-changing browser requests;
+- delegating password encoder with bcrypt for new passwords;
+- disabled form-login page and HTTP Basic authentication.
+
+Remaining Version 0.1 responsibilities:
+
+- login and logout behavior;
+- authenticated server-side session creation and invalidation;
 - authenticated principal conversion;
-- unauthorized and forbidden error responses;
-- service-to-service authentication for Python tools when introduced.
+- current-user endpoint support;
+- HTTP-only authenticated-session cookie settings;
+- consistent unauthorized and forbidden error responses.
+
+Service-to-service authentication is planned only when the Python service is introduced.
 
 ### 6.4 Company Module
 
@@ -364,6 +464,8 @@ Responsibilities:
 
 ### 7.1 Identity and Tenant Data
 
+Implemented now:
+
 ```text
 User
 - id
@@ -373,7 +475,18 @@ User
 - status
 - created_at
 - updated_at
+```
 
+Current constraints:
+
+- normalized `email` is unique;
+- `password_hash` is required and plaintext passwords are never stored;
+- `status` is restricted to approved enum values;
+- timestamps are required.
+
+Approved for later in Version 0.1:
+
+```text
 Company
 - id
 - name
@@ -389,7 +502,7 @@ CompanyMember
 - created_at
 ```
 
-`(user_id, company_id)` is unique.
+`(user_id, company_id)` will be unique. Company and membership tables are not implemented yet.
 
 ### 7.2 Document and Processing Data
 
@@ -892,13 +1005,40 @@ The storage abstraction must prevent the rest of the domain from depending on lo
 
 ### 15.1 Browser Authentication
 
-Version 0.1 uses server-side Spring Security sessions.
+Current implemented registration flow:
+
+```text
+Browser requests CSRF token
+        |
+        v
+Browser submits registration data and CSRF header
+        |
+        v
+Java validates and normalizes input
+        |
+        v
+PasswordEncoder creates a {bcrypt} hash
+        |
+        v
+User is persisted in PostgreSQL
+```
+
+Implemented security properties:
+
+- registration is public but CSRF-protected;
+- passwords are verified only through a password encoder and are never returned;
+- duplicate email is rejected without storing another account;
+- the React frontend uses the Vite `/api` proxy during local development.
+
+Approved next authentication flow:
 
 ```text
 Credentials -> password verification -> server session -> HTTP-only cookie
 ```
 
-State-changing requests use CSRF protection. Production cookie configuration must evaluate `Secure`, `SameSite`, path, idle timeout, and expiration.
+Login, logout, current-user retrieval, authenticated session creation, session invalidation, and production cookie settings are not implemented yet.
+
+State-changing requests continue to require CSRF protection. Production cookie configuration must evaluate `Secure`, `SameSite`, path, idle timeout, and expiration.
 
 ### 15.2 Company Authorization
 
@@ -949,11 +1089,22 @@ Internal traces are redacted before agent exposure. User messages are localizabl
 
 ### 18.1 Java
 
-- unit tests for domain rules;
-- integration tests with PostgreSQL and Flyway;
+Implemented tests currently include:
+
+- Spring Boot context startup;
+- PostgreSQL-backed `UserRepository` persistence and lookup;
+- database enforcement of unique email;
+- successful registration API behavior;
+- password hash persistence and password matching;
+- duplicate registration conflict response;
+- rejection of registration without CSRF;
+- transactional rollback of registration-test data.
+
+Approved Version 0.1 test growth includes:
+
+- login, logout, current-user, session, and unauthorized-access tests;
 - transaction and uniqueness tests;
-- Spring Security session and CSRF tests;
-- company isolation tests;
+- company-isolation tests;
 - document-storage contract tests;
 - processing-job lifecycle tests;
 - parser fixture and regression tests;
@@ -962,10 +1113,14 @@ Internal traces are redacted before agent exposure. User messages are localizabl
 
 ### 18.2 Frontend
 
-- TypeScript compilation;
+Implemented verification:
+
+- ESLint;
+- TypeScript production compilation through the Vite build;
 - production build;
-- focused component or integration tests where behavior justifies them;
-- end-to-end verification of the milestone flow.
+- manual browser verification of registration, duplicate feedback, CSRF flow, and persisted user data.
+
+Focused automated component or end-to-end tests may be added when frontend behavior justifies them. The remaining Version 0.1 UI must cover login, session state, company selection, upload, processing status, success, and failure.
 
 ### 18.3 Python Agents
 
@@ -1011,15 +1166,23 @@ Centralized logs, metrics, dashboards, alerts, Kafka lag, S3 events, and service
 
 ### 20.1 Version 0.1 Local Model
 
+Current implemented local runtime:
+
 ```text
 Developer machine
-├── React development server
+├── React Vite development server
+│   └── /api proxy to localhost:8080
 ├── Java Spring Boot application
 └── Docker Compose
-    └── PostgreSQL
-
-Local filesystem storage is used through an application abstraction.
+    └── PostgreSQL 17 with named volume
 ```
+
+Current startup commands are documented in `README.md`.
+
+Approved later Version 0.1 additions:
+
+- local filesystem document storage behind an application abstraction;
+- document-processing and incident components inside the Java application.
 
 ### 20.2 Version 0.2 Local Distributed Model
 
