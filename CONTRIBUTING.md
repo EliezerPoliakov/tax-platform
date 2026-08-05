@@ -7,8 +7,11 @@ Tax Platform uses an issue-driven workflow designed to keep changes understandab
 ## 2. Current Status
 
 - **Current milestone:** Version 0.1 — Minimal Platform and Deterministic Integration
-- **Application implementation:** Not started
+- **Milestone status:** In Progress
+- **Application implementation:** In Progress
 - **Last updated:** 2026-08-05
+
+Implemented application areas currently include repository bootstrap, PostgreSQL, Flyway, user persistence, registration, password hashing, CSRF protection, and the React registration form.
 
 Before contributing, read:
 
@@ -82,13 +85,46 @@ A contribution should:
 
 ### 3.5 Run Verification
 
-The exact commands will be added after application bootstrap. A completed change will eventually require the relevant subset of:
+Start PostgreSQL before backend integration tests:
 
-- backend unit tests;
-- backend integration tests;
-- parser regression tests;
-- security and tenant-isolation tests;
-- frontend type checking and production build;
+```bash
+docker compose up -d postgres
+docker compose ps
+```
+
+Run the current backend suite:
+
+```bash
+cd backend
+./mvnw test
+```
+
+Run the current frontend checks:
+
+```bash
+cd frontend
+npm run lint
+npm run build
+```
+
+For changes to the registration flow, also run the applications locally and verify the browser flow:
+
+```bash
+# terminal 1
+cd backend
+./mvnw spring-boot:run
+
+# terminal 2
+cd frontend
+npm run dev
+```
+
+As the project grows, a completed change will require the relevant subset of:
+
+- backend unit and PostgreSQL integration tests;
+- session, CSRF, and tenant-isolation tests;
+- parser fixture and regression tests;
+- frontend type checking, lint, production build, and focused UI tests;
 - Python tests;
 - agent evaluation scenarios;
 - full backend test suite for repair-agent output.

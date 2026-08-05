@@ -3,8 +3,9 @@
 ## 1. Document Status
 
 - **Document role:** Stable project vision and boundaries
-- **Application implementation:** Not started
+- **Application implementation:** In Progress
 - **Current approved milestone:** Version 0.1 — Minimal Platform and Deterministic Integration
+- **Milestone status:** In Progress
 - **Last updated:** 2026-08-05
 
 This document distinguishes among:
@@ -14,7 +15,9 @@ This document distinguishes among:
 - **planned for later** — approved direction with a later milestone;
 - **optional future evolution** — a learning or architecture option that requires future justification.
 
-At the date above, project documentation exists, but application code and runtime capabilities have not yet been implemented.
+The repository now contains a working Spring Boot backend, React frontend, PostgreSQL environment, Flyway migrations, user persistence, and a browser-to-database registration flow with password hashing and CSRF protection.
+
+Version 0.1 remains in progress. Login, authenticated sessions, company isolation, document processing, deterministic parsing, structured incidents, CI, and the agentic milestones are not yet implemented.
 
 ## 2. Vision
 

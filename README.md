@@ -6,13 +6,47 @@ Tax Platform is inspired by a limited subset of the problems found in systems su
 
 ## Current Status
 
-- **Project phase:** Documentation approved before application development
+- **Project phase:** Active local implementation
 - **Current milestone:** Version 0.1 — Minimal Platform and Deterministic Integration
-- **Milestone status:** Planned
-- **Application implementation:** Not started
-- **Documentation status:** Updated and approved on 2026-08-05
+- **Milestone status:** In Progress
+- **Application implementation:** In Progress
+- **Last verified:** 2026-08-05
 
-No backend, frontend, parser, agent service, cloud deployment, Kafka integration, Redis integration, or production infrastructure is claimed as implemented yet.
+The repository now contains a working Java backend, React frontend, PostgreSQL local environment, Flyway migrations, user persistence, and a complete registration flow from the browser to PostgreSQL.
+
+Version 0.1 is not complete. Login, authenticated sessions, company membership, document processing, deterministic parsing, structured incidents, CI, and the remaining frontend workflow are still planned for this milestone.
+
+## Implemented Now
+
+The following capabilities exist and have been verified locally:
+
+- monorepo with independently buildable `backend/` and `frontend/` applications;
+- Java 21 Spring Boot backend with Maven Wrapper;
+- React, TypeScript, and Vite frontend;
+- PostgreSQL 17 through Docker Compose;
+- environment-based local database configuration;
+- Flyway as the authoritative schema-migration mechanism;
+- `V1__baseline.sql` and `V2__create_users.sql` migrations;
+- `users` persistence model with unique normalized email, status, timestamps, and password-hash storage;
+- Spring Data JPA repository integration against PostgreSQL;
+- public registration API with validation and duplicate-email conflict handling;
+- password hashing through Spring Security using the `{bcrypt}` format;
+- CSRF protection and a browser-accessible CSRF-token endpoint;
+- React registration form connected to the backend through the Vite development proxy;
+- integration tests for persistence, uniqueness, registration, password hashing, duplicate email, and missing CSRF protection;
+- frontend lint and production-build verification;
+- manual verification of browser registration and persisted password hashes.
+
+The following are not implemented yet:
+
+- login, logout, and current-user endpoints;
+- an authenticated server-side session flow;
+- company and membership data;
+- tenant isolation;
+- document upload and storage abstraction;
+- processing jobs, deterministic parser, canonical output, incidents, or structural profiles;
+- Python agents, MCP, Kafka, Redis, AWS, S3, or Kubernetes;
+- repository CI workflow.
 
 ## Product Direction
 
@@ -84,13 +118,15 @@ Version 0.1 delivers one complete local vertical scenario:
 - a structured integration incident and structural file profile;
 - automated tests and CI checks.
 
+Registration, PostgreSQL, Flyway, password hashing, CSRF integration, and the initial React form are implemented. The remaining items are still milestone scope rather than current capabilities.
+
 The Python agent service is not part of Version 0.1. It is introduced in Version 0.2 immediately after the Version 0.1 structured failure path exists.
 
 ## Milestone Overview
 
 | Version | Goal | Status |
 |---|---|---|
-| 0.1 | Minimal platform and deterministic integration | Planned |
+| 0.1 | Minimal platform and deterministic integration | In Progress |
 | 0.2 | Support Investigation Agent | Planned later |
 | 0.3 | Integration Repair Agent | Planned later |
 | 0.4 | Asynchronous and event-driven processing with Kafka | Planned later |
@@ -100,13 +136,19 @@ The Python agent service is not part of Version 0.1. It is introduced in Version
 
 See [ROADMAP.md](ROADMAP.md) for completion criteria and dependencies.
 
-## Target Technology Status
+## Technology Status
 
 | Technology or capability | Status |
 |---|---|
-| Java 21, Spring Boot, React, TypeScript, PostgreSQL, Flyway, Spring Security | Approved for Version 0.1 |
-| Docker Compose for PostgreSQL | Approved for Version 0.1 |
+| Java 21, Spring Boot, React, TypeScript | Implemented now |
+| PostgreSQL through Docker Compose | Implemented now |
+| Flyway migrations | Implemented now |
+| User persistence and browser registration | Implemented now |
+| Spring Security password hashing and CSRF protection | Implemented now |
+| Login, logout, current user, authenticated server session | Approved next work in Version 0.1 |
+| Company membership and tenant isolation | Approved for Version 0.1 |
 | Deterministic parser, persistent processing job, structured incident | Approved for Version 0.1 |
+| Repository CI workflow | Approved for Version 0.1; not implemented yet |
 | Python agent service and LLM tool calling | Planned for Version 0.2 |
 | Spring AI MCP tools exposed by Java | Planned for Version 0.2 |
 | Persistent agent runs, tracing, approvals, and evaluations | Planned for Version 0.2 and expanded in Version 0.3 |
@@ -116,19 +158,19 @@ See [ROADMAP.md](ROADMAP.md) for completion criteria and dependencies.
 | Redis | Planned only when a demonstrated session, cache, rate-limit, or lock need exists |
 | Kubernetes | Optional future evolution after multiple independently deployable services exist |
 
-## Planned Repository Structure
+## Repository Structure
+
+Current and planned top-level structure:
 
 ```text
 tax-platform/
-├── backend/                         # Java/Spring Boot source of truth
-├── frontend/                        # React/TypeScript user interface
-├── agent-service/                   # Python service, added in Version 0.2
-├── integration-samples/             # Synthetic files and structural fixtures
-├── docs/
-│   ├── AGENTIC_INCIDENT_FLOW.md
-│   ├── SECURITY_AND_DATA_BOUNDARIES.md
-│   └── EVALUATION_STRATEGY.md
-├── docker-compose.yml
+├── backend/                         # implemented Java/Spring Boot application
+├── frontend/                        # implemented React/TypeScript application
+├── agent-service/                   # added in Version 0.2
+├── integration-samples/             # added with deterministic parser work
+├── docs/                            # detailed architecture and security documents
+├── docker-compose.yml               # implemented PostgreSQL local infrastructure
+├── .env.example                     # implemented safe local configuration example
 ├── AGENTS.md
 ├── CONTRIBUTING.md
 ├── README.md
@@ -143,11 +185,13 @@ The repository is a monorepo, but each deployable application must remain indepe
 ## Security Position
 
 - Java is the authorization boundary and business source of truth.
-- Every company-scoped request and every Java/MCP tool call rechecks tenant membership.
-- Python does not receive direct access to Java-owned business tables.
-- Raw financial files and row values are not sent to an external LLM.
+- Every future company-scoped request and every Java/MCP tool call must recheck tenant membership.
+- Passwords are persisted only as adaptive hashes, never plaintext.
+- State-changing browser requests remain protected by CSRF.
+- Python will not receive direct access to Java-owned business tables.
+- Raw financial files and row values will not be sent to an external LLM.
 - Only synthetic financial data is used in the portfolio demonstration.
-- Tool schemas are narrow, typed, authorized, and auditable.
+- Tool schemas will be narrow, typed, authorized, and auditable.
 - State-changing or repair operations require explicit permissions and human approval.
 - Model output is a proposal, not a financial or engineering source of truth.
 
@@ -155,30 +199,82 @@ See [docs/SECURITY_AND_DATA_BOUNDARIES.md](docs/SECURITY_AND_DATA_BOUNDARIES.md)
 
 ## Running Locally
 
-Application startup commands do not exist yet because application code has not been generated. Verified commands will be added only after the relevant components are implemented.
+### Prerequisites
 
-The first local infrastructure dependency will be PostgreSQL started with Docker Compose.
+- Java 21;
+- Node.js and npm;
+- Docker with Docker Compose;
+- Git.
 
-## Testing and Evaluation Direction
+### Start PostgreSQL
 
-The project will use:
+From the repository root:
 
-- backend unit, integration, persistence, security, and API tests;
-- frontend type checking and production builds;
-- parser fixtures and regression tests;
-- tenant-isolation and structured-error tests;
-- Support Agent and Repair Agent evaluation suites;
-- assertions for expected and forbidden tool calls;
-- trace, latency, token, and estimated-cost measurements;
-- CI checks before a change can be considered complete.
+```bash
+cp .env.example .env   # first setup only; keep .env out of Git
+docker compose up -d postgres
+docker compose ps
+```
 
-See [docs/EVALUATION_STRATEGY.md](docs/EVALUATION_STRATEGY.md).
+### Start the backend
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+The backend listens on `http://localhost:8080` by default.
+
+### Start the frontend
+
+In a second terminal:
+
+```bash
+cd frontend
+npm install            # first setup or after dependency changes
+npm run dev
+```
+
+Open the URL printed by Vite. During local development, requests under `/api` are proxied to the Spring Boot backend.
+
+### Stop local infrastructure
+
+```bash
+docker compose down
+```
+
+The named PostgreSQL volume is retained. Use `docker compose down -v` only when local database data should be deleted intentionally.
+
+## Testing
+
+Start PostgreSQL before backend integration tests:
+
+```bash
+docker compose up -d postgres
+```
+
+Backend tests:
+
+```bash
+cd backend
+./mvnw test
+```
+
+Frontend verification:
+
+```bash
+cd frontend
+npm run lint
+npm run build
+```
+
+Current tests cover user persistence, the PostgreSQL email uniqueness constraint, registration, password hashing, duplicate registration, and CSRF rejection. Parser, tenant-isolation, agent, and evaluation tests will be added with their corresponding milestones.
 
 ## Documentation
 
 - [PROJECT.md](PROJECT.md) — stable vision, goals, boundaries, and definition of success.
-- [ROADMAP.md](ROADMAP.md) — ordered milestones, dependencies, completion criteria, and demonstrable outcomes.
-- [ARCHITECTURE.md](ARCHITECTURE.md) — current approved architecture and explicit future evolution.
+- [ROADMAP.md](ROADMAP.md) — ordered milestones, dependencies, completion criteria, and current implementation progress.
+- [ARCHITECTURE.md](ARCHITECTURE.md) — implemented architecture and explicit future evolution.
 - [DECISIONS.md](DECISIONS.md) — architecture decision records and supersession history.
 - [AGENTS.md](AGENTS.md) — rules for coding agents working in this repository.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — issue-driven development and review workflow.
