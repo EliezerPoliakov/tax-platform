@@ -1,207 +1,336 @@
-# Tax Platform Project
+# Tax Platform Project Charter
 
-## 1. Document Purpose
+## 1. Document Status
 
-This document is the stable project charter for the Tax Platform.
+- **Document role:** Stable project vision and boundaries
+- **Application implementation:** Not started
+- **Current approved milestone:** Version 0.1 — Minimal Platform and Deterministic Integration
+- **Last updated:** 2026-08-05
 
-It defines why the project exists, the business direction, the guiding principles, the intended boundaries, and the definition of success.
+This document distinguishes among:
 
-The current implementation plan is maintained in [ROADMAP.md](ROADMAP.md). The current technical design is maintained in [ARCHITECTURE.md](ARCHITECTURE.md), and significant architectural choices are recorded in [DECISIONS.md](DECISIONS.md).
+- **implemented now** — application capabilities that exist and have been verified;
+- **approved for the current milestone** — committed scope for Version 0.1;
+- **planned for later** — approved direction with a later milestone;
+- **optional future evolution** — a learning or architecture option that requires future justification.
 
-## 2. Project Vision
+At the date above, project documentation exists, but application code and runtime capabilities have not yet been implemented.
 
-This project is not intended to be a tutorial CRUD application or a complete rewrite of the existing RubyTax system.
+## 2. Vision
 
-The goal is to build a small but realistic modern financial platform that demonstrates the engineering practices and architectural approaches used in production systems.
+Tax Platform is a small but realistic financial integration platform inspired by a limited subset of the operational problems found in systems such as Rubixtax.
 
-The project serves three purposes:
+It is not a tutorial CRUD application, a complete rewrite of Rubixtax, or an autonomous tax system. The project combines a deterministic financial core with bounded LLM agents that investigate integration incidents and assist with human-approved code repair.
 
-1. Build a complete, presentable product that can be demonstrated to potential employers.
-2. Learn modern technologies through practical implementation rather than theory alone.
-3. Practice making architectural decisions in the same way they are made in commercial software development.
+The project should be understandable as a product, defensible as an architecture, and demonstrable as an engineering portfolio system.
 
-## 3. Core Business Workflow
+## 3. Project Goals
 
-The project focuses on one complete financial workflow instead of many unrelated or unfinished use cases:
+The project has five primary goals.
+
+### 3.1 Deliver a Complete Financial Integration Scenario
+
+Build one end-to-end workflow that includes authentication, company isolation, document upload, persistent processing, deterministic parsing, normalized output, structured failure handling, and later report-oriented use of validated data.
+
+### 3.2 Demonstrate Production-Oriented Java Engineering
+
+Show practical use of:
+
+- Java 21 and Spring Boot;
+- modular business boundaries;
+- Spring Security and server-side sessions;
+- PostgreSQL and Flyway;
+- transactions, idempotency, structured errors, audit, and testing;
+- large-file-aware processing design;
+- integration adapters and canonical models;
+- CI/CD, logging, monitoring, and cloud evolution.
+
+### 3.3 Demonstrate a Genuine Agentic System
+
+Build agents that:
+
+- receive an operational goal;
+- choose among narrow tools;
+- perform multiple tool calls based on intermediate results;
+- persist state;
+- stop or request human input when required;
+- preserve traces;
+- operate within explicit permissions;
+- are evaluated with formal scenarios.
+
+The first agent investigates integration incidents. The second, separately permissioned agent prepares a repair in an isolated repository sandbox after human approval.
+
+### 3.4 Learn Technologies Through Demonstrated Need
 
-1. A user signs in.
-2. The user selects a company.
-3. The user uploads a financial document.
-4. The document is stored.
-5. Document processing is started.
-6. The user receives the processing result.
-7. The resulting data can be viewed and edited.
-8. A final report is generated.
+Docker, Python, MCP, Spring AI, Kafka, Redis, AWS, S3, observability, and Kubernetes remain part of the target learning direction, but each must enter the system at a milestone where it solves an actual problem.
 
-Additional workflows may be considered later, but they are not part of the initial scope.
+### 3.5 Produce a Credible Portfolio Narrative
 
-## 4. Guiding Principles
+At every completed milestone, the developer should be able to explain:
 
-### 4.1 Production First
+- what user or operational problem was solved;
+- what is implemented and what is not;
+- why the architecture was selected;
+- how company and data boundaries are protected;
+- how failures are represented and investigated;
+- why each infrastructure component exists;
+- what trade-offs remain.
 
-Every completed version of the project must remain functional.
+## 4. Core Deterministic Business Workflow
 
-The project should not spend months on infrastructure without producing a working result. After every iteration, the system should be in a state that can be demonstrated during an interview.
+The normal financial workflow must not depend on an LLM.
 
-### 4.2 Real Business Flow
+1. A user registers and signs in.
+2. The user selects or creates a company workspace.
+3. The user uploads a financial integration file.
+4. The file is stored through a document-storage abstraction.
+5. A persistent processing job is created.
+6. The backend determines the integration type and parser version.
+7. A deterministic parser processes the file.
+8. Parsed data is mapped to a canonical internal model.
+9. Technical validation rules run.
+10. The user receives a successful result or a structured error.
+11. A qualifying failure creates an integration incident and structural file profile.
+12. Validated normalized data may later participate in deterministic calculations and report generation.
 
-Development is driven by a realistic end-to-end financial scenario rather than isolated technical exercises.
+The exact first integration format is synthetic and simplified. It exists to prove architecture and failure handling rather than to reproduce proprietary formats.
 
-The business workflow is the foundation of the system. Technologies and architectural decisions are introduced in support of that workflow.
+## 5. Agentic Operational Workflow
 
-### 4.3 Technology Must Solve a Problem
+LLM agents are used for complex, variable, and poorly formalized operational work that would otherwise require support specialists and developers to manually investigate each integration failure.
 
-A technology must not be added simply because it is popular.
+```text
+Integration processing failure
+        |
+        v
+Support Investigation Agent
+        |
+        v
+Evidence collection and classification
+        |
+        +--> User guidance
+        +--> Known issue and approved workaround
+        +--> Deterministically approved retry
+        +--> Human escalation
+        +--> Engineering ticket
+                     |
+                     v
+               Human approval
+                     |
+                     v
+           Integration Repair Agent
+                     |
+                     v
+       Synthetic reproduction and isolated branch
+                     |
+                     v
+       Patch, regression tests, and test execution
+                     |
+                     v
+                 Draft PR
+                     |
+                     v
+             Human code review
+```
 
-Each technology should be introduced only when it addresses a real requirement. For example:
+### 5.1 Support Investigation Agent
 
-- **Flyway** — database schema migration management.
-- **Redis** — faster access to frequently read data or shared session storage when required.
-- **Kafka** — event exchange when asynchronous and event-driven communication is justified.
-- **Amazon S3** — durable object storage for financial documents.
-- **Docker** — consistent development and runtime environments.
-- **Kubernetes** — service orchestration and scaling when simpler deployment models are insufficient.
-- **AWS** — realistic cloud infrastructure when a stable application is ready to deploy.
+Planned for Version 0.2, the Support Investigation Agent:
 
-### 4.4 Learn by Building
+- gathers incident metadata and redacted evidence;
+- reads structural file profiles without row values;
+- checks parser metadata, known issues, similar incidents, retries, and deployment context;
+- classifies the failure;
+- prepares a support recommendation;
+- creates an engineering ticket when code change is likely;
+- requests human help when evidence is insufficient.
 
-Technologies are learned while developing the system.
+It does not modify application code.
 
-The goal is not merely to watch tutorials, but to implement working scenarios independently and understand the decisions behind them.
+### 5.2 Integration Repair Agent
 
-### 4.5 Small but Complete
+Planned for Version 0.3, the Integration Repair Agent:
 
-One fully implemented workflow is more valuable than ten unfinished ones.
+- starts only from an approved engineering ticket and expected behavior;
+- works with a synthetic reproduction in an isolated repository clone;
+- reads only relevant repository content;
+- produces a focused patch and regression tests;
+- runs targeted, module, and full test suites;
+- creates a draft pull request or local draft equivalent;
+- records risks and test results.
 
-The project should look and behave like a small commercial product rather than a collection of disconnected experiments.
+It cannot write to `main`, merge, deploy, access production secrets, or use real customer financial data.
 
-### 4.6 Current Reality Must Be Clear
+## 6. Guiding Principles
 
-Documentation must distinguish between:
+### 6.1 Deterministic Core, Bounded AI
 
-- what is implemented now;
-- what is approved for the current milestone;
-- what is only a possible future direction.
+LLMs do not perform financial calculations, define accounting or tax rules, approve reports, or become the business source of truth.
 
-Planned technologies must not be presented as already running parts of the system.
+AI output is operational advice or a proposed engineering change that remains subject to deterministic validation and human review.
+
+### 6.2 Vertical Milestones
+
+Every milestone must end with a working, explainable scenario. Infrastructure-only progress is insufficient unless it directly enables the demonstrated flow.
+
+### 6.3 Technology Must Solve a Demonstrated Problem
+
+- Flyway manages schema history.
+- Docker provides repeatable local infrastructure.
+- Python provides agent orchestration where Java is not the selected agent runtime.
+- Spring AI and MCP expose narrow Java capabilities without database sharing.
+- Kafka appears when event-driven asynchronous boundaries exist.
+- Redis appears for a concrete shared-session, cache, rate-limit, or lock requirement.
+- S3 appears when durable object storage and large-file workflows are ready.
+- Kubernetes remains optional until several services and operational needs justify it.
+
+### 6.4 Java Remains the Security and Business Boundary
+
+Java owns authentication, company authorization, document metadata, processing jobs, parser selection, incidents, known issues, retry eligibility, business rules, and audit-relevant platform state.
+
+Python is not trusted as a security boundary and does not read Java-owned business tables directly.
 
-## 5. Non-Goals
-
-The project does not attempt to:
-
-- fully reproduce RubyTax;
-- implement every tax form;
-- support every reporting year;
-- handle millions of users from the first version;
-- contain dozens of microservices;
-- introduce infrastructure solely to make the project appear complex.
-
-Simplifications are acceptable where they do not prevent meaningful architectural learning.
-
-## 6. Target System Direction
-
-By the end of the project, the goal is to have a small modern platform that may include:
-
-- a Java and Spring Boot core application;
-- PostgreSQL;
-- Flyway;
-- Docker;
-- AWS infrastructure;
-- Amazon S3;
-- Redis where caching or distributed sessions justify it;
-- Kafka or another asynchronous mechanism where processing requirements justify it;
-- Spring Security;
-- role-based access control;
-- React and TypeScript frontend;
-- a separately deployable Python service for document processing or AI-related work;
-- AI integration where it provides real value;
-- CI/CD;
-- monitoring and logging;
-- automated tests.
-
-These technologies will not be introduced all at once. Each one should be added only when the system has a concrete need for it.
-
-The target system is expected to become a small distributed platform, but it will not begin as a collection of empty microservices. The Java core will start as one deployable application with clear internal modules, while specialized services will be introduced incrementally.
-
-## 7. Development Approach
-
-Development is organized into small iterations.
-
-Each iteration must:
-
-- have a clear user or engineering goal;
-- define explicit scope and non-scope;
-- finish with a working version;
-- include automated verification appropriate to the change;
-- update documentation to match the implemented system.
-
-The authoritative milestone plan, statuses, implementation sequence, and completion criteria are maintained in [ROADMAP.md](ROADMAP.md).
-
-## 8. Architectural Approach
-
-Throughout development, the project should continuously address production-level questions:
-
-- What happens when the load increases?
-- How is the system secured?
-- How are company boundaries enforced?
-- How are documents stored?
-- How is caching organized?
-- How are database migrations managed?
-- How is auditing implemented?
-- How is idempotency guaranteed?
-- How do queues and asynchronous processing work?
-- How are services scaled?
-- How is fault tolerance achieved?
-- How are configuration and secrets managed?
-- How is the system observed and diagnosed?
-
-A capability does not need to be implemented immediately, but its architectural implications should be understood when it becomes relevant.
-
-The current architecture is documented in [ARCHITECTURE.md](ARCHITECTURE.md). Significant choices and trade-offs are recorded in [DECISIONS.md](DECISIONS.md).
-
-## 9. Use of AI
-
-AI is a development tool, not a replacement for the developer.
-
-The developer remains responsible for the main architectural decisions and must understand the resulting implementation.
-
-AI may be used for:
-
-- architecture discussions;
-- code review;
-- accelerating routine code implementation;
-- test generation;
-- assistance with unfamiliar technologies;
-- documentation support;
-- selected features inside the platform itself.
-
-AI-generated code or advice must be reviewed, tested, and understood before it becomes part of the project.
-
-## 10. Documentation Responsibilities
-
-The project uses the following documentation model:
-
-- [README.md](README.md) — public entry point, current status, verified setup, and links.
-- [PROJECT.md](PROJECT.md) — stable vision, principles, boundaries, and success criteria.
-- [ROADMAP.md](ROADMAP.md) — current work, milestone scope, statuses, and completion criteria.
-- [ARCHITECTURE.md](ARCHITECTURE.md) — the approved architecture plan and, as development progresses, the architecture actually implemented.
-- [DECISIONS.md](DECISIONS.md) — significant architectural decisions and trade-offs.
-
-Documentation must be updated after meaningful architectural changes and milestone completion. It does not need to change after every small code edit.
-
-## 11. Definition of Success
-
-The success of the project is not measured by the number of technologies it contains.
-
-The primary goal is to become a significantly stronger software engineer while producing a credible, demonstrable system.
-
-At any stage of development, the project should make it possible to explain clearly to a potential employer:
-
-- what problems the system solves;
-- what is implemented today;
-- why the architecture was chosen;
-- why each technology is used;
-- what trade-offs were made;
-- how security and data boundaries are enforced;
-- how failures are handled;
-- how the system can evolve further.
+### 6.5 Privacy by Data Minimization
+
+The portfolio system uses synthetic financial data.
+
+External LLMs receive only the minimum sanitized technical information required for a tool call or investigation. Raw customer documents, financial amounts, personal identifiers, bank accounts, real company names, credentials, and database dumps are outside the permitted model context.
+
+### 6.6 Human Control over Material Actions
+
+Human approval is required before a repair run. Human review is required before code merge. Deployment is performed by normal CI/CD or a human-approved process, not by an agent.
+
+### 6.7 Persistent and Auditable Work
+
+Processing jobs, incidents, agent runs, tool calls, approvals, and evaluation results must be persisted. A service restart must not silently erase an active investigation or repair history.
+
+### 6.8 Small, Focused Engineering Changes
+
+Implementation should follow issue-driven work, explicit acceptance criteria, small branches, tests, meaningful commits, and reviewable pull requests. Coding agents must follow [AGENTS.md](AGENTS.md).
+
+### 6.9 Honest Documentation
+
+Documentation must never present planned components as implemented. The words implemented, approved, planned, and optional must retain distinct meanings.
+
+## 7. Core Data and Integration Concepts
+
+The stable domain direction includes:
+
+- users;
+- companies;
+- company memberships;
+- document metadata and storage references;
+- integration type and parser version;
+- persistent processing jobs;
+- canonical normalized records;
+- technical validation results;
+- structured errors;
+- structural file profiles;
+- integration incidents;
+- known issues;
+- retry eligibility decisions;
+- internal engineering tickets;
+- agent runs, steps, tool executions, approvals, and evaluations.
+
+Detailed ownership and lifecycle are defined in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## 8. Security Position
+
+The following are mandatory project rules:
+
+- every company-scoped operation rechecks membership in Java;
+- browser or agent-provided company identifiers are never sufficient authorization;
+- every MCP tool validates identity, permission, tenant scope, and input schema;
+- Python has no direct access to Java business data storage;
+- arbitrary SQL, arbitrary shell access, and unrestricted file reads are not agent tools;
+- raw financial files are not sent to an external LLM;
+- prompts, traces, logs, and Git must not contain secrets;
+- uploaded document text is untrusted data and cannot override system instructions;
+- state-changing tools require explicit permission;
+- retry safety is determined by deterministic backend logic;
+- repair requires human approval;
+- merge and deployment remain outside agent authority;
+- model output is validated and treated as a proposal.
+
+See [docs/SECURITY_AND_DATA_BOUNDARIES.md](docs/SECURITY_AND_DATA_BOUNDARIES.md).
+
+## 9. Non-Goals
+
+The project does not require:
+
+- a complete Rubixtax replacement;
+- real tax forms or proprietary parser code;
+- real customer financial data;
+- production-grade reversible anonymization for arbitrary spreadsheets;
+- autonomous accounting or tax decisions;
+- autonomous report approval;
+- dozens of integrations or agents;
+- autonomous merge or deployment;
+- a complete Jira or GitHub integration in the earliest milestone;
+- Kafka before event-driven processing exists;
+- Redis without a measured requirement;
+- Kubernetes in early versions;
+- a large custom UI design system;
+- production-scale infrastructure before a local workflow is complete.
+
+## 10. Approved Milestone Direction
+
+- **Version 0.1:** Minimal platform and deterministic integration.
+- **Version 0.2:** Support Investigation Agent.
+- **Version 0.3:** Integration Repair Agent.
+- **Version 0.4:** Asynchronous and event-driven processing.
+- **Version 0.5:** Cloud document storage and deployment.
+- **Version 0.6:** Reliability and operational maturity.
+- **Version 0.7:** Additional integrations and variants.
+
+The detailed order, dependencies, and completion criteria are maintained in [ROADMAP.md](ROADMAP.md).
+
+## 11. Portfolio Goals
+
+The project should eventually demonstrate:
+
+- Java/Spring Boot backend engineering;
+- React/TypeScript frontend development;
+- PostgreSQL schema and transaction design;
+- session authentication and multi-tenant authorization;
+- deterministic document processing and canonical modeling;
+- structured production troubleshooting;
+- Python agent orchestration;
+- multi-step tool calling through narrow MCP capabilities;
+- human-in-the-loop repair workflows;
+- agent persistence, tracing, and evaluation;
+- asynchronous event processing and idempotency;
+- cloud storage and deployment;
+- CI/CD, testing, observability, and security controls.
+
+A technology counts only after the relevant working scenario exists and can be explained.
+
+## 12. Definition of Project Success
+
+The project is portfolio-successful when the following demonstration works:
+
+1. A user signs in and selects a company.
+2. A normal synthetic integration file is uploaded and processed successfully.
+3. A problematic synthetic variant creates a persistent job failure and integration incident.
+4. The Support Investigation Agent independently calls multiple narrow tools, gathers evidence, classifies the problem, produces a safe support recommendation, and creates an engineering ticket when required.
+5. The user interface exposes a concise reasoning summary without private chain-of-thought content.
+6. A human approves the expected repair behavior.
+7. The Repair Agent reproduces the problem with synthetic data, reads the relevant repository code, creates a focused patch and regression tests, runs the required tests, and produces a draft pull request.
+8. A human reviews the change.
+9. Agent traces and evaluation results are available for demonstration.
+10. No raw financial data or production secret is sent to the model.
+
+Only after this milestone exists may the project be described in a resume as an implemented agentic integration-support workflow.
+
+## 13. Documentation Responsibilities
+
+- [README.md](README.md) is the public entry point and honest current-status summary.
+- [PROJECT.md](PROJECT.md) is the stable charter.
+- [ROADMAP.md](ROADMAP.md) controls milestone scope and status.
+- [ARCHITECTURE.md](ARCHITECTURE.md) defines current and future system structure.
+- [DECISIONS.md](DECISIONS.md) records significant choices and supersession.
+- [AGENTS.md](AGENTS.md) constrains AI-assisted development.
+- [CONTRIBUTING.md](CONTRIBUTING.md) defines issue, branch, commit, review, and test practices.
+- `docs/` contains the detailed incident, security, and evaluation designs.
+
+After each milestone, these documents must be updated to reflect the running system rather than the earlier plan.
