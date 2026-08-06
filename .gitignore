@@ -1,7 +1,55 @@
 
 # Local environment
 .env
+.local-storage/
 
 # IntelliJ IDEA
 .idea/
 *.iml
+*.iws
+*.ipr
+out/
+
+# Java and Maven (Backend)
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+!backend/**/src/main/**/target/
+!backend/**/src/test/**/target/
+backend/HELP.md
+
+# Node.js and React (Frontend)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+frontend/logs
+frontend/*.log
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/lerna-debug.log*
+
+# Other IDEs and Editors
+.vscode/
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
