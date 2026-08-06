@@ -12,9 +12,9 @@ Tax Platform is inspired by a limited subset of the problems found in systems su
 - **Application implementation:** In Progress
 - **Last verified:** 2026-08-06
 
-The repository now contains a working Java backend, React frontend, PostgreSQL local environment, Flyway migrations, user persistence, a complete registration flow, and a fully functional session-based authentication lifecycle (login, logout, current-user retrieval) with CSRF protection.
+The repository now contains a working Java backend, React frontend, PostgreSQL local environment, Flyway migrations, user persistence, a complete registration flow, a fully functional session-based authentication lifecycle (login, logout, current-user retrieval), company persistence, explicit membership, and tenant-isolated company API with a corresponding frontend selection flow. All changes are protected by CSRF and verified by integration tests.
 
-Version 0.1 is not complete. Company membership, tenant isolation, document processing, deterministic parsing, structured incidents, CI, and the remaining frontend workflow are still planned for this milestone.
+Version 0.1 is not complete. Document processing, deterministic parsing, structured incidents, CI, and the remaining frontend workflow are still planned for this milestone.
 
 ## Implemented Now
 
@@ -26,24 +26,24 @@ The following capabilities exist and have been verified locally:
 - PostgreSQL 17 through Docker Compose;
 - environment-based local database configuration;
 - Flyway as the authoritative schema-migration mechanism;
-- `V1__baseline.sql` and `V2__create_users.sql` migrations;
-- `users` persistence model with unique normalized email, status, timestamps, and password-hash storage;
+- `V1__baseline.sql`, `V2__create_users.sql`, and `V3__create_companies.sql` migrations;
+- `users`, `companies`, and `company_members` persistence models;
 - Spring Data JPA repository integration against PostgreSQL;
 - public registration API with validation and duplicate-email conflict handling;
 - password hashing through Spring Security using the `{bcrypt}` format;
 - session-based authentication with `POST /api/auth/login`, `POST /api/auth/logout`, and `GET /api/auth/me`;
+- authenticated company API with `POST /api/companies`, `GET /api/companies`, and `GET /api/companies/{id}`;
+- tenant isolation enforced in Java through membership-scoped repository queries;
 - Spring Security authenticated server-side sessions with HTTP-only cookies;
-- CSRF protection for all state-changing requests, including authentication;
-- React registration and login forms with session restoration on application start;
-- authenticated-user display and logout capability in the frontend;
-- integration tests for persistence, uniqueness, registration, login/logout lifecycle, and session security;
+- CSRF protection for all state-changing requests, including authentication and company creation;
+- React registration, login, and company management forms with session restoration on application start;
+- authenticated-user display, company selection, and logout capability in the frontend;
+- integration tests for persistence, uniqueness, registration, login/logout lifecycle, company creation, transactional rollback, and tenant isolation;
 - frontend lint and production-build verification;
 - manual verification of browser registration, login, and session persistence.
 
 The following are not implemented yet:
 
-- company and membership data;
-- tenant isolation;
 - document upload and storage abstraction;
 - processing jobs, deterministic parser, canonical output, incidents, or structural profiles;
 - Python agents, MCP, Kafka, Redis, AWS, S3, or Kubernetes;
@@ -146,8 +146,8 @@ See [ROADMAP.md](ROADMAP.md) for completion criteria and dependencies.
 | Flyway migrations | Implemented now |
 | User persistence and browser registration | Implemented now |
 | Spring Security password hashing and CSRF protection | Implemented now |
-| Login, logout, current user, authenticated server session | Approved next work in Version 0.1 |
-| Company membership and tenant isolation | Approved for Version 0.1 |
+| Login, logout, current user, authenticated server session | Implemented now |
+| Company membership and tenant isolation | Implemented now |
 | Deterministic parser, persistent processing job, structured incident | Approved for Version 0.1 |
 | Repository CI workflow | Approved for Version 0.1; not implemented yet |
 | Python agent service and LLM tool calling | Planned for Version 0.2 |
@@ -269,7 +269,7 @@ npm run lint
 npm run build
 ```
 
-Current tests cover user persistence, the PostgreSQL email uniqueness constraint, registration, password hashing, duplicate registration, and CSRF rejection. Parser, tenant-isolation, agent, and evaluation tests will be added with their corresponding milestones.
+Current tests cover user persistence, the PostgreSQL email uniqueness constraint, registration, password hashing, duplicate registration, CSRF rejection, company creation, transactional rollback, and tenant isolation. Parser, agent, and evaluation tests will be added with their corresponding milestones.
 
 ## Documentation
 

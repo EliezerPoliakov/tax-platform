@@ -13,6 +13,13 @@ type UserResponse = {
   displayName: string
 }
 
+type CompanyResponse = {
+  id: number
+  name: string
+  role: 'OWNER' | 'MEMBER'
+  createdAt: string
+}
+
 type ApiError = {
   code?: string
   message?: string
@@ -26,8 +33,18 @@ function App() {
   const [submitting, setSubmitting] = useState(false)
 
   const [user, setUser] = useState<UserResponse | null>(null)
+  const [companies, setCompanies] = useState<CompanyResponse[]>([])
+  const [selectedCompany, setSelectedCompany] = useState<CompanyResponse | null>(null)
+  const [companyName, setCompanyName] = useState('')
   const [loading, setLoading] = useState(true)
+  const [loadingCompanies, setLoadingCompanies] = useState(false)
   const [view, setView] = useState<'register' | 'login'>('register')
+
+  function clearAuth() {
+    setUser(null)
+    setCompanies([])
+    setSelectedCompany(null)
+  }
 
   useEffect(() => {
     async function restoreSession() {
@@ -38,6 +55,8 @@ function App() {
         if (response.ok) {
           const userData: UserResponse = await response.json()
           setUser(userData)
+        } else if (response.status === 401) {
+          clearAuth()
         }
       } catch (error) {
         console.error('Failed to restore session', error)
@@ -47,6 +66,62 @@ function App() {
     }
     restoreSession()
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      loadCompanies()
+    }
+  }, [user])
+
+  async function loadCompanies() {
+    setLoadingCompanies(true)
+    try {
+      const response = await fetch('/api/companies', {
+        credentials: 'include',
+      })
+      if (response.ok) {
+        const data: CompanyResponse[] = await response.json()
+        setCompanies(data)
+      }
+    } catch (error) {
+      console.error('Failed to load companies', error)
+    } finally {
+      setLoadingCompanies(false)
+    }
+  }
+
+  async function createCompany(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setSubmitting(true)
+    setMessage('')
+
+    try {
+      const csrf = await getCsrfToken()
+      const response = await fetch('/api/companies', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          [csrf.headerName]: csrf.token,
+        },
+        body: JSON.stringify({ name: companyName }),
+      })
+
+      if (response.ok) {
+        const newCompany: CompanyResponse = await response.json()
+        setCompanyName('')
+        setMessage(`Company "${newCompany.name}" created successfully.`)
+        await loadCompanies()
+      } else {
+        const error: ApiError = await response.json().catch(() => ({}))
+        setMessage(error.message ?? 'Failed to create company.')
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'The backend is unavailable.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   async function getCsrfToken(): Promise<CsrfToken> {
     const csrfResponse = await fetch('/api/csrf', {
@@ -170,7 +245,7 @@ function App() {
       })
 
       if (response.ok) {
-        setUser(null)
+        clearAuth()
         setMessage('Logged out successfully.')
       } else {
         setMessage('Logout failed.')
@@ -193,13 +268,60 @@ function App() {
   if (user) {
     return (
       <main className="page">
+        <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <span>Logged in as <strong>{user.email}</strong></span>
+          <button onClick={logout} className="link-button">Log out</button>
+        </header>
+
         <section className="card">
           <p className="eyebrow">Tax Platform</p>
-          <h1>Welcome, {user.displayName}</h1>
-          <p className="intro">
-            You are logged in as <strong>{user.email}</strong>.
-          </p>
-          <button onClick={logout}>Log out</button>
+          <h1>Companies</h1>
+          
+          {loadingCompanies ? (
+            <p>Loading companies…</p>
+          ) : companies.length === 0 ? (
+            <p className="intro">You don't have any companies yet.</p>
+          ) : (
+            <ul className="company-list" style={{ listStyle: 'none', padding: 0, margin: '1rem 0' }}>
+              {companies.map((company) => (
+                <li key={company.id} style={{ marginBottom: '0.5rem' }}>
+                  <button 
+                    onClick={() => setSelectedCompany(company)}
+                    className={selectedCompany?.id === company.id ? 'active' : ''}
+                    style={{ width: '100%', textAlign: 'left', padding: '0.5rem' }}
+                  >
+                    {company.name} ({company.role})
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {selectedCompany && (
+            <div className="selected-company" style={{ marginTop: '1rem', padding: '1rem', border: '1px solid #ccc', borderRadius: '4px' }}>
+              <h2>Selected: {selectedCompany.name}</h2>
+              <p>Role: {selectedCompany.role}</p>
+              <p>ID: {selectedCompany.id}</p>
+            </div>
+          )}
+
+          <hr style={{ margin: '2rem 0' }} />
+
+          <h2>Create new company</h2>
+          <form onSubmit={createCompany}>
+            <label>
+              Company Name
+              <input
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                required
+              />
+            </label>
+            <button disabled={submitting}>
+              {submitting ? 'Creating…' : 'Create company'}
+            </button>
+          </form>
+
           {message && <p className="message">{message}</p>}
         </section>
       </main>

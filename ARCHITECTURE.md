@@ -14,7 +14,7 @@ This document explicitly separates:
 - **planned for later milestones** — approved evolution that is not yet running;
 - **optional future evolution** — possible additions requiring future justification.
 
-The current running subset includes a React frontend with registration and login, Java Spring Boot identity and security components with session-based authentication and CSRF protection, PostgreSQL through Docker Compose, Flyway migrations, and a complete authentication lifecycle. Companies, documents, processing, incidents, agents, and cloud infrastructure remain unimplemented.
+The current running subset includes a React frontend with registration, login, and company management, Java Spring Boot identity, security, and company components with session-based authentication, CSRF protection, and tenant isolation, PostgreSQL through Docker Compose, Flyway migrations, and a complete authentication and company-workspace lifecycle. Documents, processing, incidents, agents, and cloud infrastructure remain unimplemented.
 
 ## 2. Architectural Goals
 
@@ -77,6 +77,8 @@ Only a subset of this target exists in each milestone.
 |                           |
 | - registration form       |
 | - login form              |
+| - company selection       |
+| - company creation        |
 | - authentication state    |
 | - logout capability       |
 | - validation feedback     |
@@ -91,6 +93,8 @@ Only a subset of this target exists in each milestone.
 | - registration API        |
 | - login / logout API      |
 | - current-user API        |
+| - company API             |
+| - tenant isolation        |
 | - request validation      |
 | - email normalization     |
 | - password hashing        |
@@ -106,6 +110,8 @@ Only a subset of this target exists in each milestone.
 |                           |
 | - flyway_schema_history   |
 | - users                   |
+| - companies               |
+| - company_members         |
 +---------------------------+
 ```
 
@@ -117,26 +123,32 @@ POST /api/auth/register
 POST /api/auth/login
 POST /api/auth/logout
 GET  /api/auth/me
+POST /api/companies
+GET  /api/companies
+GET  /api/companies/{id}
 ```
 
 Implemented persistence:
 
 - Flyway `V1__baseline.sql`;
 - Flyway `V2__create_users.sql`;
+- Flyway `V3__create_companies.sql`;
 - `users` table with unique normalized email, password hash, display name, status, and timestamps;
-- JPA `User` entity and `UserRepository`.
+- `companies` table for multi-tenant workspace isolation;
+- `company_members` table for explicit many-to-many relationship and roles;
+- JPA entities and repositories for `User`, `Company`, and `CompanyMember`.
 
 Implemented security behavior:
 
 - plaintext passwords are not persisted;
 - passwords use Spring Security's delegating encoder with `{bcrypt}` hashes;
-- registration and authentication require a valid CSRF token;
+- registration, authentication, and company creation require a valid CSRF token;
 - server-side sessions with HTTP-only cookies;
-- duplicate email is protected by both an application check and a database uniqueness constraint.
+- duplicate email is protected by both an application check and a database uniqueness constraint;
+- tenant isolation enforced in Java through `MembershipService` and explicit membership-scoped repository queries.
 
 Not implemented in the current runtime:
 
-- company membership or tenant authorization;
 - document storage, processing jobs, parsers, results, incidents, or structural profiles;
 - Python, MCP, Kafka, Redis, S3, AWS, or agent runtimes.
 
@@ -277,8 +289,9 @@ Current base package:
 
 ```text
 com.poliakov.taxplatform
-├── identity             # partially implemented
-└── security             # partially implemented
+├── identity             # implemented
+├── security             # implemented
+├── companies            # implemented
 ```
 
 Approved Version 0.1 evolution:
@@ -287,7 +300,7 @@ Approved Version 0.1 evolution:
 com.poliakov.taxplatform
 ├── identity
 ├── security
-├── company
+├── companies
 ├── document
 ├── processing
 ├── integration
@@ -484,22 +497,10 @@ User
 - status
 - created_at
 - updated_at
-```
 
-Current constraints:
-
-- normalized `email` is unique;
-- `password_hash` is required and plaintext passwords are never stored;
-- `status` is restricted to approved enum values;
-- timestamps are required.
-
-Approved for later in Version 0.1:
-
-```text
 Company
 - id
 - name
-- registration_number (synthetic or optional in demo)
 - created_at
 - updated_at
 
@@ -509,9 +510,15 @@ CompanyMember
 - company_id
 - role
 - created_at
+- updated_at
 ```
 
-`(user_id, company_id)` will be unique. Company and membership tables are not implemented yet.
+Current constraints:
+
+- normalized `email` is unique;
+- `password_hash` is required;
+- `(user_id, company_id)` is unique;
+- timestamps are required.
 
 ### 7.2 Document and Processing Data
 
@@ -1041,7 +1048,7 @@ Production cookie configuration must evaluate `Secure`, `SameSite`, path, idle t
 
 Authentication answers who the user is. Company authorization determines whether the user may access a tenant-scoped resource.
 
-Every document, job, incident, known issue link, support recommendation, and approval operation resolves company scope server-side and checks membership.
+Every document, job, incident, known issue link, support recommendation, and approval operation resolves company scope server-side and checks membership. Tenant isolation is enforced through the `MembershipService` and explicit membership-scoped repository queries.
 
 ### 15.3 Service Authorization
 
