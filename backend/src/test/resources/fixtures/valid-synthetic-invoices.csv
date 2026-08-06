@@ -1,0 +1,4 @@
+document_number,document_date,currency,amount
+INV-001,2026-01-01,USD,100.00
+INV-002,2026-01-02,EUR,200.50
+INV-003,2026-01-03,USD,50.25

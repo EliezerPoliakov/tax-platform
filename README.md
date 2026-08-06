@@ -26,8 +26,8 @@ The following capabilities exist and have been verified locally:
 - PostgreSQL 17 through Docker Compose;
 - environment-based local database configuration;
 - Flyway as the authoritative schema-migration mechanism;
-- `V1__baseline.sql`, `V2__create_users.sql`, `V3__create_companies.sql`, and `V4__create_documents.sql` migrations;
-- `users`, `companies`, `company_members`, and `documents` persistence models;
+- `V1__baseline.sql`, `V2__create_users.sql`, `V3__create_companies.sql`, `V4__create_documents.sql`, and `V5__create_processing_jobs.sql` migrations;
+- `users`, `companies`, `company_members`, `documents`, `processing_jobs`, and `canonical_records` persistence models;
 - Spring Data JPA repository integration against PostgreSQL;
 - public registration API with validation and duplicate-email conflict handling;
 - password hashing through Spring Security using the `{bcrypt}` format;
@@ -40,13 +40,15 @@ The following capabilities exist and have been verified locally:
 - CSRF protection for all state-changing requests, including authentication and company creation;
 - React registration, login, and company management forms with session restoration on application start;
 - authenticated-user display, company selection, and logout capability in the frontend;
-- integration tests for persistence, uniqueness, registration, login/logout lifecycle, company creation, transactional rollback, and tenant isolation;
+- authenticated processing job API with `POST /api/companies/{id}/documents/{docId}/processing-jobs` and `GET /api/companies/{id}/processing-jobs/{jobId}`;
+- deterministic synthetic CSV parser with versioning and canonical output;
+- integration tests for persistence, uniqueness, registration, login/logout lifecycle, company creation, transactional rollback, tenant isolation, and deterministic job processing;
 - frontend lint and production-build verification;
 - manual verification of browser registration, login, and session persistence.
 
 The following are not implemented yet:
 
-- processing jobs, deterministic parser, canonical output, incidents, or structural profiles;
+- structured incidents or structural profiles;
 - Python agents, MCP, Kafka, Redis, AWS, S3, or Kubernetes;
 - repository CI workflow.
 

@@ -18,7 +18,7 @@ This roadmap is the authoritative source for implementation order, dependencies,
 - **Optional future evolution** — not committed and requires future justification.
 - **Deferred** — intentionally removed from the current sequence.
 
-At the date above, repository bootstrap, PostgreSQL, Flyway, user persistence, browser registration, a complete authentication lifecycle (login, logout, and authenticated sessions), company membership, and tenant isolation are implemented. Version 0.1 remains in progress.
+At the date above, repository bootstrap, PostgreSQL, Flyway, user persistence, browser registration, a complete authentication lifecycle (login, logout, and authenticated sessions), company membership, tenant isolation, and deterministic document processing are implemented. Version 0.1 remains in progress.
 
 ## 3. Roadmap Principles
 
@@ -54,17 +54,14 @@ Implemented and verified:
 - CSRF-token endpoint and CSRF enforcement for all authentication and state-changing requests;
 - React registration, login, and company management forms connected to the backend through the Vite proxy;
 - React current-user restoration, company selection, and authenticated-user display;
-- PostgreSQL repository, registration, authentication, company API, and document API integration tests;
+- PostgreSQL repository, registration, authentication, company API, document API, and processing job integration tests;
 - local storage contract and path-traversal resistance tests;
 - transactional rollback verification for company and owner-membership creation;
 - storage/metadata consistency handling with cleanup compensation;
 - frontend lint and production-build verification;
 - manual browser-to-database registration, login, and company creation verification.
 
-Still required for Version 0.1:
-
-- persistent processing job and deterministic parser;
-- canonical success output;
+- persistent processing job, deterministic synthetic-csv-v1 parser, and canonical output;
 - structured failure, structural profile, and incident;
 - complete frontend workflow;
 - repository CI and final milestone documentation.
