@@ -18,7 +18,7 @@ This roadmap is the authoritative source for implementation order, dependencies,
 - **Optional future evolution** — not committed and requires future justification.
 - **Deferred** — intentionally removed from the current sequence.
 
-At the date above, repository bootstrap, PostgreSQL, Flyway, user persistence, browser registration, and a complete authentication lifecycle (login, logout, and authenticated sessions) are implemented. Version 0.1 remains in progress.
+At the date above, repository bootstrap, PostgreSQL, Flyway, user persistence, browser registration, a complete authentication lifecycle (login, logout, and authenticated sessions), company membership, and tenant isolation are implemented. Version 0.1 remains in progress.
 
 ## 3. Roadmap Principles
 
@@ -42,23 +42,23 @@ Implemented and verified:
 - Maven Wrapper and Vite project bootstrap;
 - PostgreSQL 17 through Docker Compose;
 - environment-based database configuration;
-- Flyway baseline and `users` schema migrations;
-- JPA `User` model and repository;
+- Flyway baseline, `users`, and `companies` schema migrations;
+- JPA `User`, `Company`, and `CompanyMember` models;
 - normalized unique email persistence;
 - Spring Security password hashing with `{bcrypt}` storage;
-- public registration API with validation and duplicate-email conflict response;
 - login, logout, and current-user endpoints;
+- company creation, listing, and membership-scoped retrieval endpoints;
 - Spring Security authenticated server-side sessions with HTTP-only cookies;
-- CSRF-token endpoint and CSRF enforcement for all authentication requests;
-- React registration and login forms connected to the backend through the Vite proxy;
-- React current-user restoration and authenticated-user display;
-- PostgreSQL repository, registration, and authentication API integration tests;
+- CSRF-token endpoint and CSRF enforcement for all authentication and state-changing requests;
+- React registration, login, and company management forms connected to the backend through the Vite proxy;
+- React current-user restoration, company selection, and authenticated-user display;
+- PostgreSQL repository, registration, authentication, and company API integration tests;
+- transactional rollback verification for company and owner-membership creation;
 - frontend lint and production-build verification;
-- manual browser-to-database registration and login verification.
+- manual browser-to-database registration, login, and company creation verification.
 
 Still required for Version 0.1:
 
-- company membership and tenant isolation;
 - document metadata and storage abstraction;
 - persistent processing job and deterministic parser;
 - canonical success output;
@@ -209,15 +209,19 @@ Remaining:
 
 #### Step 4 — Company Membership and Tenant Isolation
 
-**Status:** In Progress
+**Status:** Implemented
 
-- implement company and membership entities;
-- create owner membership transactionally;
-- list accessible companies;
-- enforce company authorization in backend services;
-- add cross-company access tests.
+- added `companies` and `company_members` tables;
+- implemented company and membership entities and repositories;
+- implemented transactional company creation with owner role assignment;
+- implemented membership-scoped company listing and detail retrieval;
+- added integration tests for company creation, listing, and tenant isolation;
+- verified transactional rollback when member creation fails;
+- implemented company selection and creation in the React frontend.
 
 #### Step 5 — Document Metadata and Storage Abstraction
+
+**Status:** Approved for current milestone
 
 - define company-scoped document model;
 - define `DocumentStorage` interface;
@@ -592,15 +596,14 @@ The following are deliberately deferred from Version 0.1:
 
 The next implementation issue is:
 
-> Step 4: Implement company model, explicit membership, and tenant isolation.
+> Step 5: Document Metadata and Storage Abstraction.
 
 Expected scope:
 
-- implement company and membership entities;
-- create owner membership transactionally during company creation;
-- list accessible companies for the authenticated user;
-- enforce company-scoped authorization in backend services;
-- add cross-company access tests (negative tenant-isolation tests).
+- define company-scoped document model;
+- define `DocumentStorage` interface;
+- add local filesystem implementation for synthetic files;
+- upload and retrieve metadata without exposing arbitrary filesystem paths.
 
-Step 5: Document Metadata and Storage Abstraction follows after company membership is verified.
+Step 6: Persistent Processing Job and Parser follows after document metadata is verified.
 

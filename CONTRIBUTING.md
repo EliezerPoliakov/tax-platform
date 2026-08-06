@@ -9,9 +9,9 @@ Tax Platform uses an issue-driven workflow designed to keep changes understandab
 - **Current milestone:** Version 0.1 — Minimal Platform and Deterministic Integration
 - **Milestone status:** In Progress
 - **Application implementation:** In Progress
-- **Last updated:** 2026-08-05
+- **Last updated:** 2026-08-06
 
-Implemented application areas currently include repository bootstrap, PostgreSQL, Flyway, user persistence, registration, password hashing, CSRF protection, and the React registration form.
+Implemented application areas currently include repository bootstrap, PostgreSQL, Flyway, user persistence, registration, password hashing, CSRF protection, session-based authentication, company membership, tenant isolation, and the corresponding React workspace.
 
 Before contributing, read:
 

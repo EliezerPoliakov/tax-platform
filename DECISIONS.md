@@ -10,10 +10,10 @@ Routine implementation details, class renames, small refactors, and ordinary bug
 
 ## 2. Document Status
 
-- **Application implementation:** Not started
+- **Application implementation:** In Progress
 - **Original ADR baseline:** 2026-07-27
 - **Agentic architecture update:** 2026-08-05
-- **Last updated:** 2026-08-05
+- **Last updated:** 2026-08-06
 
 The earlier roadmap assumption that Version 0.1 would contain only identity and company workspace work is superseded by the 2026-08-05 roadmap. That assumption was not itself a numbered ADR. The seven original ADRs remain applicable; ADR-001 is clarified by ADR-009 regarding the exact trigger for the first Python service.
 
