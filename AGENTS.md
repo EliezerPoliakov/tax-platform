@@ -23,11 +23,13 @@ Implemented now:
 - session-based authentication lifecycle (login, logout, /api/auth/me);
 - Spring Security authenticated server-side sessions and CSRF protection;
 - company membership and tenant isolation with transactional creation;
-- React authentication flow, company workspace, and selection.
+- React authentication flow, company workspace, and selection;
+- persistent processing jobs and deterministic synthetic-csv-v1 parser;
+- canonical success output and records.
 
 Not implemented yet:
 
-- documents, processing, parsers, incidents, or agents;
+- structural profiles, incidents, or agents;
 - Kafka, Redis, AWS, S3, Kubernetes, or production deployment.
 
 Agents must verify the current status in `README.md`, `ROADMAP.md`, and `ARCHITECTURE.md` before making changes. Planned technologies must not be described as implemented.

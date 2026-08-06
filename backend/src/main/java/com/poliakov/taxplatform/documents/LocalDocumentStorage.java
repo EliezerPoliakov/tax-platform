@@ -57,6 +57,23 @@ public class LocalDocumentStorage implements DocumentStorage {
         }
     }
 
+    @Override
+    public InputStream load(String key) {
+        validateKey(key);
+        try {
+            Path file = this.rootLocation.resolve(Paths.get(key)).normalize().toAbsolutePath();
+            if (!file.getParent().equals(this.rootLocation.toAbsolutePath())) {
+                throw new RuntimeException("Cannot load file outside current directory.");
+            }
+            if (!Files.exists(file)) {
+                throw new RuntimeException("File not found: " + key);
+            }
+            return Files.newInputStream(file);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load file: " + key, e);
+        }
+    }
+
     private void validateKey(String key) {
         if (key == null || key.isEmpty() || key.contains("..") || key.contains("/") || key.contains("\\")) {
             throw new IllegalArgumentException("Invalid storage key: " + key);
