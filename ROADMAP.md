@@ -6,7 +6,7 @@
 - **Current milestone status:** In Progress
 - **Application implementation:** In Progress
 - **Documentation baseline:** Approved on 2026-08-05
-- **Last updated:** 2026-08-05
+- **Last updated:** 2026-08-06
 
 This roadmap is the authoritative source for implementation order, dependencies, milestone completion criteria, and what becomes demonstrable after each version.
 
@@ -18,7 +18,7 @@ This roadmap is the authoritative source for implementation order, dependencies,
 - **Optional future evolution** — not committed and requires future justification.
 - **Deferred** — intentionally removed from the current sequence.
 
-At the date above, repository bootstrap, PostgreSQL, Flyway, user persistence, and browser registration are implemented. Version 0.1 remains in progress.
+At the date above, repository bootstrap, PostgreSQL, Flyway, user persistence, browser registration, and a complete authentication lifecycle (login, logout, and authenticated sessions) are implemented. Version 0.1 remains in progress.
 
 ## 3. Roadmap Principles
 
@@ -47,16 +47,17 @@ Implemented and verified:
 - normalized unique email persistence;
 - Spring Security password hashing with `{bcrypt}` storage;
 - public registration API with validation and duplicate-email conflict response;
-- CSRF-token endpoint and CSRF enforcement for registration;
-- React registration form connected to the backend through the Vite proxy;
-- PostgreSQL repository and registration API integration tests;
+- login, logout, and current-user endpoints;
+- Spring Security authenticated server-side sessions with HTTP-only cookies;
+- CSRF-token endpoint and CSRF enforcement for all authentication requests;
+- React registration and login forms connected to the backend through the Vite proxy;
+- React current-user restoration and authenticated-user display;
+- PostgreSQL repository, registration, and authentication API integration tests;
 - frontend lint and production-build verification;
-- manual browser-to-database registration verification.
+- manual browser-to-database registration and login verification.
 
 Still required for Version 0.1:
 
-- login, logout, current-user endpoint, and authenticated server-side session;
-- HTTP-only authenticated-session cookie behavior;
 - company membership and tenant isolation;
 - document metadata and storage abstraction;
 - persistent processing job and deterministic parser;
@@ -193,27 +194,22 @@ Remaining:
 
 #### Step 3 — Identity and Session Security
 
-**Status:** In Progress
-
-Implemented:
+**Status:** Implemented
 
 - user persistence and unique normalized email;
 - registration request validation;
 - adaptive password hashing;
 - duplicate-email conflict handling;
-- CSRF-token endpoint and CSRF-protected registration;
-- registration API integration tests;
-- React registration screen and backend connection.
-
-Remaining:
-
-- implement login and logout;
-- expose the current authenticated user;
-- create and verify the server-side authenticated session;
-- configure and verify authenticated-session cookie behavior;
-- add session lifecycle and unauthorized-access tests.
+- login, logout, and authenticated current-user endpoints;
+- server-side session creation and invalidation;
+- HTTP-only session cookie configuration;
+- CSRF-token endpoint and CSRF-protected authentication flow;
+- registration and authentication API integration tests;
+- React registration, login, and session restoration.
 
 #### Step 4 — Company Membership and Tenant Isolation
+
+**Status:** In Progress
 
 - implement company and membership entities;
 - create owner membership transactionally;
@@ -596,17 +592,15 @@ The following are deliberately deferred from Version 0.1:
 
 The next implementation issue is:
 
-> Complete the authentication lifecycle with login, logout, current-user retrieval, and a verified server-side session, while preserving CSRF protection and the existing registration flow.
+> Step 4: Implement company model, explicit membership, and tenant isolation.
 
 Expected scope:
 
-- authenticate by normalized email and password;
-- reject invalid credentials without leaking account details;
-- create an authenticated server-side session;
-- expose `GET /api/auth/me`;
-- implement logout and session invalidation;
-- add API integration tests for success, failure, unauthenticated access, session reuse, and logout;
-- extend the React UI only enough to demonstrate login, current user, and logout.
+- implement company and membership entities;
+- create owner membership transactionally during company creation;
+- list accessible companies for the authenticated user;
+- enforce company-scoped authorization in backend services;
+- add cross-company access tests (negative tenant-isolation tests).
 
-Company membership remains the following task after session authentication is complete.
+Step 5: Document Metadata and Storage Abstraction follows after company membership is verified.
 

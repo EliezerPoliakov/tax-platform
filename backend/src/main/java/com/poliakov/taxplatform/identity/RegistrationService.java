@@ -25,7 +25,7 @@ public class RegistrationService {
     @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
         String normalizedEmail = request.email()
-                .strip()
+                .trim()
                 .toLowerCase(Locale.ROOT);
 
         if (userRepository.existsByEmail(normalizedEmail)) {
@@ -37,24 +37,25 @@ public class RegistrationService {
         User user = new User(
                 normalizedEmail,
                 passwordEncoder.encode(request.password()),
-                request.displayName().strip(),
+                request.displayName().trim(),
                 UserStatus.ACTIVE,
                 now,
                 now
         );
 
+        User savedUser;
         try {
-            User savedUser = userRepository.saveAndFlush(user);
-
-            return new RegistrationResponse(
-                    savedUser.getId(),
-                    savedUser.getEmail(),
-                    savedUser.getDisplayName()
-            );
+            savedUser = userRepository.saveAndFlush(user);
         } catch (DataIntegrityViolationException exception) {
             // Database uniqueness remains the final protection
             // against concurrent duplicate registrations.
             throw new DuplicateEmailException();
         }
+
+        return new RegistrationResponse(
+                savedUser.getId(),
+                savedUser.getEmail(),
+                savedUser.getDisplayName()
+        );
     }
 }

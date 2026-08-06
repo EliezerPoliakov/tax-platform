@@ -5,7 +5,7 @@
 - **Architecture baseline:** Approved before application development
 - **Current approved milestone:** Version 0.1 — Minimal Platform and Deterministic Integration
 - **Application implementation:** In Progress
-- **Last updated:** 2026-08-05
+- **Last updated:** 2026-08-06
 
 This document explicitly separates:
 
@@ -14,7 +14,7 @@ This document explicitly separates:
 - **planned for later milestones** — approved evolution that is not yet running;
 - **optional future evolution** — possible additions requiring future justification.
 
-The current running subset includes a React registration UI, Java Spring Boot identity and security components, PostgreSQL through Docker Compose, Flyway migrations, and browser-to-database registration. Login, authenticated sessions, companies, documents, processing, incidents, agents, and cloud infrastructure remain unimplemented.
+The current running subset includes a React frontend with registration and login, Java Spring Boot identity and security components with session-based authentication and CSRF protection, PostgreSQL through Docker Compose, Flyway migrations, and a complete authentication lifecycle. Companies, documents, processing, incidents, agents, and cloud infrastructure remain unimplemented.
 
 ## 2. Architectural Goals
 
@@ -76,21 +76,26 @@ Only a subset of this target exists in each milestone.
 | React Frontend            |
 |                           |
 | - registration form       |
+| - login form              |
+| - authentication state    |
+| - logout capability       |
 | - validation feedback     |
 +-------------+-------------+
               |
               | JSON over HTTP through Vite /api proxy
-              | CSRF token and cookie
+              | session cookie + CSRF header
               v
 +---------------------------+
 | Java Spring Boot App      |
 |                           |
 | - registration API        |
+| - login / logout API      |
+| - current-user API        |
 | - request validation      |
 | - email normalization     |
 | - password hashing        |
-| - duplicate handling      |
-| - CSRF endpoint/security  |
+| - session management      |
+| - CSRF security           |
 +-------------+-------------+
               |
               | JPA / JDBC
@@ -109,6 +114,9 @@ Implemented endpoints:
 ```text
 GET  /api/csrf
 POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/logout
+GET  /api/auth/me
 ```
 
 Implemented persistence:
@@ -121,13 +129,13 @@ Implemented persistence:
 Implemented security behavior:
 
 - plaintext passwords are not persisted;
-- new passwords use Spring Security's delegating encoder with `{bcrypt}` hashes;
-- registration requires a valid CSRF token;
+- passwords use Spring Security's delegating encoder with `{bcrypt}` hashes;
+- registration and authentication require a valid CSRF token;
+- server-side sessions with HTTP-only cookies;
 - duplicate email is protected by both an application check and a database uniqueness constraint.
 
 Not implemented in the current runtime:
 
-- login, logout, current-user retrieval, or an authenticated server-side session;
 - company membership or tenant authorization;
 - document storage, processing jobs, parsers, results, incidents, or structural profiles;
 - Python, MCP, Kafka, Redis, S3, AWS, or agent runtimes.
@@ -311,12 +319,13 @@ Current implementation:
 - secure password hashes;
 - user status and timestamps;
 - registration request validation;
-- duplicate-email conflict response.
+- duplicate-email conflict response;
+- authenticated user DTO;
+- integration with login and current-user retrieval.
 
 Remaining Version 0.1 responsibilities:
 
-- authenticated user profile;
-- integration with login and current-user retrieval.
+- none (core identity implemented; company membership is in Company Module).
 
 The identity module does not own company authorization.
 
@@ -326,19 +335,19 @@ Current implementation:
 
 - Spring Security filter-chain configuration;
 - public registration endpoint;
+- login and logout endpoints;
+- current-user endpoint;
 - public CSRF-token endpoint;
-- CSRF enforcement for state-changing browser requests;
+- CSRF enforcement for all state-changing browser requests;
 - delegating password encoder with bcrypt for new passwords;
-- disabled form-login page and HTTP Basic authentication.
+- authenticated server-side session creation and invalidation;
+- HTTP-only authenticated-session cookie settings;
+- custom authentication entry points for consistent JSON error responses;
+- disabled default form-login page and HTTP Basic authentication.
 
 Remaining Version 0.1 responsibilities:
 
-- login and logout behavior;
-- authenticated server-side session creation and invalidation;
-- authenticated principal conversion;
-- current-user endpoint support;
-- HTTP-only authenticated-session cookie settings;
-- consistent unauthorized and forbidden error responses.
+- none (core session security implemented).
 
 Service-to-service authentication is planned only when the Python service is introduced.
 
@@ -1005,40 +1014,28 @@ The storage abstraction must prevent the rest of the domain from depending on lo
 
 ### 15.1 Browser Authentication
 
-Current implemented registration flow:
+Current implemented authentication lifecycle:
 
 ```text
-Browser requests CSRF token
-        |
-        v
-Browser submits registration data and CSRF header
-        |
-        v
-Java validates and normalizes input
-        |
-        v
-PasswordEncoder creates a {bcrypt} hash
-        |
-        v
-User is persisted in PostgreSQL
+1. Browser requests CSRF token.
+2. User registers or logs in with CSRF header.
+3. Java validates credentials and creates a Spring Security session.
+4. Java returns an HTTP-only session cookie.
+5. Browser stores the cookie and uses it for subsequent requests.
+6. Browser calls /api/auth/me to restore session on application start.
+7. User logs out; Java invalidates the session and clears the cookie.
 ```
 
 Implemented security properties:
 
 - registration is public but CSRF-protected;
+- login uses normalized email and password verification;
 - passwords are verified only through a password encoder and are never returned;
-- duplicate email is rejected without storing another account;
+- authenticated server-side sessions with HTTP-only cookies;
+- CSRF protection for all state-changing browser requests;
 - the React frontend uses the Vite `/api` proxy during local development.
 
-Approved next authentication flow:
-
-```text
-Credentials -> password verification -> server session -> HTTP-only cookie
-```
-
-Login, logout, current-user retrieval, authenticated session creation, session invalidation, and production cookie settings are not implemented yet.
-
-State-changing requests continue to require CSRF protection. Production cookie configuration must evaluate `Secure`, `SameSite`, path, idle timeout, and expiration.
+Production cookie configuration must evaluate `Secure`, `SameSite`, path, idle timeout, and expiration.
 
 ### 15.2 Company Authorization
 
@@ -1095,15 +1092,14 @@ Implemented tests currently include:
 - PostgreSQL-backed `UserRepository` persistence and lookup;
 - database enforcement of unique email;
 - successful registration API behavior;
+- login, logout, current-user, session, and unauthorized-access tests;
 - password hash persistence and password matching;
 - duplicate registration conflict response;
-- rejection of registration without CSRF;
-- transactional rollback of registration-test data.
+- rejection of registration or login without CSRF;
+- transactional rollback of test data.
 
 Approved Version 0.1 test growth includes:
 
-- login, logout, current-user, session, and unauthorized-access tests;
-- transaction and uniqueness tests;
 - company-isolation tests;
 - document-storage contract tests;
 - processing-job lifecycle tests;

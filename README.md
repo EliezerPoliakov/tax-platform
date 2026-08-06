@@ -10,11 +10,11 @@ Tax Platform is inspired by a limited subset of the problems found in systems su
 - **Current milestone:** Version 0.1 — Minimal Platform and Deterministic Integration
 - **Milestone status:** In Progress
 - **Application implementation:** In Progress
-- **Last verified:** 2026-08-05
+- **Last verified:** 2026-08-06
 
-The repository now contains a working Java backend, React frontend, PostgreSQL local environment, Flyway migrations, user persistence, and a complete registration flow from the browser to PostgreSQL.
+The repository now contains a working Java backend, React frontend, PostgreSQL local environment, Flyway migrations, user persistence, a complete registration flow, and a fully functional session-based authentication lifecycle (login, logout, current-user retrieval) with CSRF protection.
 
-Version 0.1 is not complete. Login, authenticated sessions, company membership, document processing, deterministic parsing, structured incidents, CI, and the remaining frontend workflow are still planned for this milestone.
+Version 0.1 is not complete. Company membership, tenant isolation, document processing, deterministic parsing, structured incidents, CI, and the remaining frontend workflow are still planned for this milestone.
 
 ## Implemented Now
 
@@ -31,16 +31,17 @@ The following capabilities exist and have been verified locally:
 - Spring Data JPA repository integration against PostgreSQL;
 - public registration API with validation and duplicate-email conflict handling;
 - password hashing through Spring Security using the `{bcrypt}` format;
-- CSRF protection and a browser-accessible CSRF-token endpoint;
-- React registration form connected to the backend through the Vite development proxy;
-- integration tests for persistence, uniqueness, registration, password hashing, duplicate email, and missing CSRF protection;
+- session-based authentication with `POST /api/auth/login`, `POST /api/auth/logout`, and `GET /api/auth/me`;
+- Spring Security authenticated server-side sessions with HTTP-only cookies;
+- CSRF protection for all state-changing requests, including authentication;
+- React registration and login forms with session restoration on application start;
+- authenticated-user display and logout capability in the frontend;
+- integration tests for persistence, uniqueness, registration, login/logout lifecycle, and session security;
 - frontend lint and production-build verification;
-- manual verification of browser registration and persisted password hashes.
+- manual verification of browser registration, login, and session persistence.
 
 The following are not implemented yet:
 
-- login, logout, and current-user endpoints;
-- an authenticated server-side session flow;
 - company and membership data;
 - tenant isolation;
 - document upload and storage abstraction;

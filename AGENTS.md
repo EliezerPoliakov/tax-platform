@@ -11,7 +11,7 @@ It applies to any agent that reads, changes, tests, reviews, or documents reposi
 - **Application implementation:** In Progress
 - **Current milestone:** Version 0.1 — Minimal Platform and Deterministic Integration
 - **Milestone status:** In Progress
-- **Last updated:** 2026-08-05
+- **Last updated:** 2026-08-06
 
 Implemented now:
 
@@ -20,11 +20,12 @@ Implemented now:
 - Flyway schema migrations;
 - user persistence and repository tests;
 - user registration with validation, normalized email, bcrypt password hashing, and duplicate handling;
-- CSRF-protected registration and React integration.
+- session-based authentication lifecycle (login, logout, /api/auth/me);
+- Spring Security authenticated server-side sessions and CSRF protection;
+- React authentication flow, session restoration, and logout capability.
 
 Not implemented yet:
 
-- login, logout, current user, and authenticated sessions;
 - companies, tenant isolation, documents, processing, parsers, incidents, or agents;
 - Kafka, Redis, AWS, S3, Kubernetes, or production deployment.
 
