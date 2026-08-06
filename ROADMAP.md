@@ -42,24 +42,27 @@ Implemented and verified:
 - Maven Wrapper and Vite project bootstrap;
 - PostgreSQL 17 through Docker Compose;
 - environment-based database configuration;
-- Flyway baseline, `users`, and `companies` schema migrations;
-- JPA `User`, `Company`, and `CompanyMember` models;
+- Flyway baseline, `users`, `companies`, and `documents` schema migrations;
+- JPA `User`, `Company`, `CompanyMember`, and `Document` models;
 - normalized unique email persistence;
 - Spring Security password hashing with `{bcrypt}` storage;
 - login, logout, and current-user endpoints;
 - company creation, listing, and membership-scoped retrieval endpoints;
+- document upload, listing, and metadata retrieval endpoints scoped by company;
+- local filesystem document storage abstraction with path-traversal protection;
 - Spring Security authenticated server-side sessions with HTTP-only cookies;
 - CSRF-token endpoint and CSRF enforcement for all authentication and state-changing requests;
 - React registration, login, and company management forms connected to the backend through the Vite proxy;
 - React current-user restoration, company selection, and authenticated-user display;
-- PostgreSQL repository, registration, authentication, and company API integration tests;
+- PostgreSQL repository, registration, authentication, company API, and document API integration tests;
+- local storage contract and path-traversal resistance tests;
 - transactional rollback verification for company and owner-membership creation;
+- storage/metadata consistency handling with cleanup compensation;
 - frontend lint and production-build verification;
 - manual browser-to-database registration, login, and company creation verification.
 
 Still required for Version 0.1:
 
-- document metadata and storage abstraction;
 - persistent processing job and deterministic parser;
 - canonical success output;
 - structured failure, structural profile, and incident;
@@ -221,12 +224,15 @@ Remaining:
 
 #### Step 5 — Document Metadata and Storage Abstraction
 
-**Status:** Approved for current milestone
+**Status:** Implemented
 
-- define company-scoped document model;
-- define `DocumentStorage` interface;
-- add local filesystem implementation for synthetic files;
-- upload and retrieve metadata without exposing arbitrary filesystem paths.
+- defined company-scoped document model;
+- defined `DocumentStorage` interface;
+- added local filesystem implementation for synthetic files;
+- added multipart upload with SHA-256 integrity and size validation;
+- implemented storage/database consistency with cleanup compensation;
+- implemented authorized metadata retrieval scoped by company;
+- added integration tests for storage, API, security, and error conditions.
 
 #### Step 6 — Persistent Processing Job and Parser
 
@@ -596,14 +602,12 @@ The following are deliberately deferred from Version 0.1:
 
 The next implementation issue is:
 
-> Step 5: Document Metadata and Storage Abstraction.
+> Step 6: Persistent Processing Job and Parser.
 
 Expected scope:
 
-- define company-scoped document model;
-- define `DocumentStorage` interface;
-- add local filesystem implementation for synthetic files;
-- upload and retrieve metadata without exposing arbitrary filesystem paths.
-
-Step 6: Persistent Processing Job and Parser follows after document metadata is verified.
+- create processing-job lifecycle;
+- select integration type and parser version;
+- implement one deterministic parser and canonical model;
+- persist success output or structured failure.
 

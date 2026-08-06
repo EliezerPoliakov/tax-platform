@@ -14,7 +14,7 @@ This document explicitly separates:
 - **planned for later milestones** — approved evolution that is not yet running;
 - **optional future evolution** — possible additions requiring future justification.
 
-The current running subset includes a React frontend with registration, login, and company management, Java Spring Boot identity, security, and company components with session-based authentication, CSRF protection, and tenant isolation, PostgreSQL through Docker Compose, Flyway migrations, and a complete authentication and company-workspace lifecycle. Documents, processing, incidents, agents, and cloud infrastructure remain unimplemented.
+The current running subset includes a React frontend with registration, login, and company management, Java Spring Boot identity, security, company, and document components with session-based authentication, CSRF protection, tenant isolation, and local document storage, PostgreSQL through Docker Compose, Flyway migrations, and a complete authentication, company-workspace, and document-metadata lifecycle. Document processing, incidents, agents, and cloud infrastructure remain unimplemented.
 
 ## 2. Architectural Goals
 
@@ -126,6 +126,9 @@ GET  /api/auth/me
 POST /api/companies
 GET  /api/companies
 GET  /api/companies/{id}
+POST /api/companies/{companyId}/documents
+GET  /api/companies/{companyId}/documents
+GET  /api/companies/{companyId}/documents/{documentId}
 ```
 
 Implemented persistence:
@@ -133,10 +136,12 @@ Implemented persistence:
 - Flyway `V1__baseline.sql`;
 - Flyway `V2__create_users.sql`;
 - Flyway `V3__create_companies.sql`;
+- Flyway `V4__create_documents.sql`;
 - `users` table with unique normalized email, password hash, display name, status, and timestamps;
 - `companies` table for multi-tenant workspace isolation;
 - `company_members` table for explicit many-to-many relationship and roles;
-- JPA entities and repositories for `User`, `Company`, and `CompanyMember`.
+- `documents` table for company-scoped file metadata;
+- JPA entities and repositories for `User`, `Company`, `CompanyMember`, and `Document`.
 
 Implemented security behavior:
 
@@ -145,7 +150,9 @@ Implemented security behavior:
 - registration, authentication, and company creation require a valid CSRF token;
 - server-side sessions with HTTP-only cookies;
 - duplicate email is protected by both an application check and a database uniqueness constraint;
-- tenant isolation enforced in Java through `MembershipService` and explicit membership-scoped repository queries.
+- tenant isolation enforced in Java through `MembershipService` and explicit membership-scoped repository queries;
+- document access and upload strictly scoped by company membership;
+- storage keys are backend-generated and opaque.
 
 Not implemented in the current runtime:
 
@@ -377,6 +384,18 @@ Responsibilities:
 Every company-scoped use case starts from an authenticated identity and server-side membership check.
 
 ### 6.5 Document Module
+
+Current implementation:
+
+- `Document` JPA entity;
+- `DocumentStatus` and `IntegrationType` enums;
+- `DocumentRepository` for metadata persistence;
+- `DocumentStorage` interface and `LocalDocumentStorage` implementation;
+- `DocumentService` for business logic and storage/metadata consistency;
+- company-scoped multipart upload with SHA-256 and size validation;
+- company-scoped listing and metadata retrieval;
+- local filesystem root configuration;
+- path-traversal protection and opaque storage keys.
 
 Responsibilities:
 

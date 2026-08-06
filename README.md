@@ -26,13 +26,15 @@ The following capabilities exist and have been verified locally:
 - PostgreSQL 17 through Docker Compose;
 - environment-based local database configuration;
 - Flyway as the authoritative schema-migration mechanism;
-- `V1__baseline.sql`, `V2__create_users.sql`, and `V3__create_companies.sql` migrations;
-- `users`, `companies`, and `company_members` persistence models;
+- `V1__baseline.sql`, `V2__create_users.sql`, `V3__create_companies.sql`, and `V4__create_documents.sql` migrations;
+- `users`, `companies`, `company_members`, and `documents` persistence models;
 - Spring Data JPA repository integration against PostgreSQL;
 - public registration API with validation and duplicate-email conflict handling;
 - password hashing through Spring Security using the `{bcrypt}` format;
 - session-based authentication with `POST /api/auth/login`, `POST /api/auth/logout`, and `GET /api/auth/me`;
 - authenticated company API with `POST /api/companies`, `GET /api/companies`, and `GET /api/companies/{id}`;
+- authenticated document API with `POST /api/companies/{id}/documents`, `GET /api/companies/{id}/documents`, and `GET /api/companies/{id}/documents/{docId}`;
+- local document storage abstraction with path-traversal protection and SHA-256 integrity;
 - tenant isolation enforced in Java through membership-scoped repository queries;
 - Spring Security authenticated server-side sessions with HTTP-only cookies;
 - CSRF protection for all state-changing requests, including authentication and company creation;
@@ -44,7 +46,6 @@ The following capabilities exist and have been verified locally:
 
 The following are not implemented yet:
 
-- document upload and storage abstraction;
 - processing jobs, deterministic parser, canonical output, incidents, or structural profiles;
 - Python agents, MCP, Kafka, Redis, AWS, S3, or Kubernetes;
 - repository CI workflow.
@@ -111,7 +112,6 @@ Version 0.1 delivers one complete local vertical scenario:
 - user registration and login;
 - company membership and tenant isolation;
 - one synthetic integration format;
-- document upload through a storage abstraction;
 - persistent processing jobs;
 - one deterministic parser;
 - canonical normalized output;
@@ -148,6 +148,7 @@ See [ROADMAP.md](ROADMAP.md) for completion criteria and dependencies.
 | Spring Security password hashing and CSRF protection | Implemented now |
 | Login, logout, current user, authenticated server session | Implemented now |
 | Company membership and tenant isolation | Implemented now |
+| Document upload and local storage abstraction | Implemented now |
 | Deterministic parser, persistent processing job, structured incident | Approved for Version 0.1 |
 | Repository CI workflow | Approved for Version 0.1; not implemented yet |
 | Python agent service and LLM tool calling | Planned for Version 0.2 |
